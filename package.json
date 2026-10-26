@@ -47,5 +47,13 @@
   "scripts": {
     "test": "node scripts/check-secrets.mjs && node --test test/plugin.test.mjs",
     "check:secrets": "node scripts/check-secrets.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/4KAForever11/dsh-mcd-mcp.git"
+  },
+  "homepage": "https://github.com/4KAForever11/dsh-mcd-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/4KAForever11/dsh-mcd-mcp/issues"
   }
 }
