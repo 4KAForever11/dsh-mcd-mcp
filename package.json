@@ -45,6 +45,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "test": "node --test test/plugin.test.mjs"
+    "test": "node scripts/check-secrets.mjs && node --test test/plugin.test.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs"
   }
 }
