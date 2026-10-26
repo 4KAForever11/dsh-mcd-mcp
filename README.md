@@ -38,10 +38,19 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 - 无 Token / Token 无效时远端返回 **401 或 403**,插件会把它们翻译成「Token 无效或已过期」而不是静默空清单。
 - 429(限流,官方约 600 次/分钟)自动退避重试两次;其他错误不重试,避免重复下单之类的副作用。
 
+## 凭证安全
+
+**仓库里不含、也不会包含任何 Token。** 具体做法：
+
+- Token 只存在你本机的 `~/.dsh/dsh-mcd-mcp.json`（权限 0600），该路径在 `.gitignore` 里被显式排除；
+- 测试用的是本地 mock 服务器和假 Token，不读也不写你的真实配置；
+- `npm test` 会先跑 `scripts/check-secrets.mjs`：扫描所有被 git 跟踪的文件，既查常见凭证形态（Bearer / `sk-` / `ghp_` / AWS key 等），也拿你本机真实 Token 原文逐行比对，命中就直接失败并退出；
+- 想单独查一遍：`npm run check:secrets`。
+
 ## 开发
 
 ```bash
-npm test          # node --test,自带 mock MCP 服务器,不联网
+npm test          # 先做凭证扫描,再跑 node --test(自带 mock MCP 服务器,不联网)
 ```
 
 测试用本地 mock 覆盖:参数 schema 转换、握手与会话头、动态注册、真实 `tools/call`、无 Token 降级、401 归因、SSE 响应解析、设置页路由(含非回环拒绝)。
