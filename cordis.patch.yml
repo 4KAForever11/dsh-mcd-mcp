@@ -1,0 +1,11 @@
+# dsh-mcd-mcp bundle patch:麦当劳 MCP 插件(Host + Client 设置页)。
+#
+# name 必须等于实际包名(dsh-mcd-mcp):cordis 按 name import 包,
+# 写成插件 id 会导致新装用户报 Cannot find package。
+#
+# 端点/Token 都不在这里写死 —— 用户在「设置 → 麦当劳 MCP」里填 Token,
+# 保存到 ~/.dsh/dsh-mcd-mcp.json。patch 里硬编码某台机器的路径/密钥
+# 会让别人装完直接起不来。
+- insert:
+    - id: dsh-mcd-mcp
+      name: dsh-mcd-mcp

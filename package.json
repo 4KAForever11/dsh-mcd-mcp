@@ -1,0 +1,50 @@
+{
+  "name": "dsh-mcd-mcp",
+  "version": "0.1.0",
+  "description": "接入麦当劳中国 MCP(mcp.mcd.cn):粘贴自己生成的 Token 后,远端全部工具自动注册为 DSH 原生工具(mcd_ 前缀),附设置页与连通性自检。",
+  "keywords": [
+    "dsh-plugin",
+    "dsh-mcd-mcp",
+    "deepseek-harness",
+    "mcd",
+    "mcdonalds",
+    "mcp"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "icon": "icon.svg",
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/",
+    "icon.svg",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "node --test test/plugin.test.mjs"
+  }
+}

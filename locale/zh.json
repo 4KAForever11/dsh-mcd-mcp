@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "麦当劳 MCP",
+    "description": "接入麦当劳中国 MCP(mcp.mcd.cn):粘贴一次自己生成的 Token,远端全部工具即以 mcd_ 前缀注册为 DSH 原生工具,并内置连通性自检。"
+  }
+}

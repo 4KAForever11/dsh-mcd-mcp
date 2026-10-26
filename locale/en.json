@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "McDonald's MCP",
+    "description": "Connects McDonald's China MCP (mcp.mcd.cn): paste your own token once and every remote tool is registered as a native DSH tool with an mcd_ prefix, plus a built-in connectivity self-test."
+  }
+}
