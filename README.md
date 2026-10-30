@@ -60,3 +60,4 @@ npm test          # 先做凭证扫描,再跑 node --test(自带 mock MCP 服务
 MIT
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/4kaforever11-dsh-mcd-mcp-1f4487?v=7f892b4c39fb3b39504f03d1b0f0ae74)](https://m8ven.ai/mcp/4kaforever11-dsh-mcd-mcp-1f4487?s=readme)
+[![M8ven Score](https://m8ven.ai/badge/mcp/4kaforever11-dsh-mcd-mcp-1f4487?v=40bf14c85faa990e4dfad277ebadd1fe)](https://m8ven.ai/mcp/4kaforever11-dsh-mcd-mcp-1f4487?s=readme)
