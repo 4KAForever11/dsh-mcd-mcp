@@ -22,7 +22,7 @@ mkdirSync(TMP_ROOT, { recursive: true })
 const HOME = mkdtempSync(join(TMP_ROOT, 'dsh-mcd-test-'))
 process.env.DSH_HOME = HOME
 
-const { apply, toParameters, toToolName } = await import('../index.js')
+const { apply, toParameters, toToolName, HINT_KEYS } = await import('../index.js')
 
 const REMOTE_TOOLS = [
   {
@@ -235,6 +235,23 @@ test('有 Token:握手 + 动态注册全部远端工具,execute 能调通', asyn
     const value = await orderTool.execute({ page: 2 }, {})
     assert.equal(value.ok, true)
     assert.deepEqual(value.data, { ok: true, tool: 'order-list', args: { page: 2 } })
+
+    // 每个工具都必须带齐四个布尔 hint,一个都不能漏(OpenAI 目录会拒)
+    for (const [name, def] of ctx._tools) {
+      assert.ok(def.annotations, name + ' 缺少 annotations')
+      for (const key of HINT_KEYS) {
+        assert.equal(typeof def.annotations[key], 'boolean', name + ' 的 ' + key + ' 必须是布尔')
+      }
+      // 投影后 annotations 会被丢掉,所以 description 里要留一行可读 hint
+      assert.match(def.description, /hints: readOnly=(true|false) destructive=(true|false) idempotent=(true|false) openWorld=(true|false)/, name + ' 的 description 缺少 hint 行')
+    }
+
+    // 只读/破坏性推断要符合远端工具语义
+    assert.equal(ctx._tools.get('mcd_order_list').annotations.readOnlyHint, true, 'order-list 是只读查询')
+    assert.equal(ctx._tools.get('mcd_query_my_account').annotations.readOnlyHint, true, 'query-my-account 是只读查询')
+    assert.equal(ctx._tools.get('mcd_party_order_create').annotations.readOnlyHint, false, 'party-order-create 会下单')
+    assert.equal(ctx._tools.get('mcd_party_order_create').annotations.destructiveHint, false, '下单不是破坏性操作')
+    assert.equal(ctx._tools.get('mcd_call').annotations.readOnlyHint, false, 'mcd_call 能干什么取决于远端,不能标只读')
 
     // 直连兜底工具
     const direct = await ctx._tools.get('mcd_call').execute({ name: 'query-my-account', arguments: {} }, {})

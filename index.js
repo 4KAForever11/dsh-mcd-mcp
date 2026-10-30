@@ -467,6 +467,88 @@ export function toToolName(remoteName) {
   return (TOOL_PREFIX + safe).slice(0, 64)
 }
 
+// ---------------------------------------------------------------- 工具注解
+/**
+ * 每个工具都必须带齐四个布尔 hint(MCP ToolAnnotations 的语义):
+ *
+ *   readOnlyHint    只读,不改变远端/本机任何状态
+ *   destructiveHint 可能删改已有数据(仅在 readOnlyHint 为 false 时有意义)
+ *   idempotentHint  同样的入参重复调用不会产生额外影响
+ *   openWorldHint   与开放世界(外部系统/实体)交互,而非封闭的本地域
+ *
+ * DSH 的 ToolSchema 只允许 `{ name, description, parameters }`,宿主
+ * `register()` 投影时会把未列入白名单的字段丢掉,所以这里做三件事,
+ * 保证无论在哪一层都能拿到 hint:
+ *   1. 定义上挂一份完整 annotations 对象(面向未来的宿主/工具目录);
+ *   2. description 末尾追加一行机器可读的 hint(投影后仍然可见);
+ *   3. presentCall 返回 kind,让 DSH 自己在调用前就能标出读写性质。
+ */
+export const HINT_KEYS = ['readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint']
+
+/** 远端只读工具:查询、列表、详情、价格计算之类。 */
+const REMOTE_READ_PREFIX = /^(query|list|get|search|calculate|available|fetch|describe|read)_/
+const REMOTE_READ_SUFFIX = /_(list|detail|info|price|coupons|stores|addresses|account|meals|prizes|products|session|calendar|promotions)$/
+/** 明确会写远端状态的工具:不吃上面的只读规则。 */
+const REMOTE_WRITE = new Set([
+  'create_order', 'cancel_order', 'mall_create_order', 'party_order_create',
+  'delivery_create_address', 'draw_lottery', 'auto_bind_coupons',
+])
+/** 会不可逆地删改已有数据的工具。 */
+const REMOTE_DESTRUCTIVE = new Set(['cancel_order', 'draw_lottery'])
+/** 重复调用不会产生额外影响的写工具。 */
+const REMOTE_IDEMPOTENT_WRITE = new Set(['cancel_order', 'auto_bind_coupons'])
+
+/**
+ * 远端工具名 → 四个 hint。
+ *
+ * 未知的新工具按 MCP 的保守默认处理(可能写、不幂等、开放世界):
+ * 远端哪天加了新能力,宁可多提示一次,也不要漏报一个会扣积分的调用。
+ */
+export function annotateRemoteTool(remoteName) {
+  // 远端工具名用连字符(order-list),下面几张表和正则都按下划线写,先归一。
+  const n = String(remoteName || '').trim().toLowerCase().replace(/-/g, '_')
+  const readOnly = REMOTE_WRITE.has(n)
+    ? false
+    : REMOTE_READ_PREFIX.test(n) || REMOTE_READ_SUFFIX.test(n)
+  return {
+    readOnlyHint: readOnly,
+    destructiveHint: REMOTE_DESTRUCTIVE.has(n),
+    idempotentHint: readOnly || REMOTE_IDEMPOTENT_WRITE.has(n),
+    openWorldHint: true,
+  }
+}
+
+/** 一行紧凑的 hint 文本,写进 description 里,宿主投影后依然可见。 */
+export function hintLine(hints) {
+  return 'hints: readOnly=' + hints.readOnlyHint +
+    ' destructive=' + hints.destructiveHint +
+    ' idempotent=' + hints.idempotentHint +
+    ' openWorld=' + hints.openWorldHint
+}
+
+/** hint → DSH 原生 ToolCallKind,让宿主在调用前就能标注读写性质。 */
+function callKind(hints) {
+  if (hints.readOnlyHint) return 'read'
+  return hints.destructiveHint ? 'delete' : 'edit'
+}
+
+/**
+ * 给工具定义补上三处 hint。四个值一律强制成真正的布尔 ——
+ * 任何 undefined/字符串都会让下游目录校验直接判定为「缺注解」。
+ */
+export function withHints(definition, hints) {
+  const annotations = {}
+  for (const key of HINT_KEYS) annotations[key] = hints[key] === true
+  return {
+    ...definition,
+    annotations,
+    description: String(definition.description || '') + '\n\n' + hintLine(annotations),
+    presentCall:
+      definition.presentCall ||
+      ((args) => ({ card: 'generic', title: definition.name, kind: callKind(annotations), rawInput: args })),
+  }
+}
+
 // output.schema 也不能写 { type:'json' } —— 那是 defineTool 作者层的简写,
 // 原始校验里 'json' 不是合法 type。空 schema 表示「任意 JSON」,正是我们要的。
 const RESULT_OUTPUT = {
@@ -543,12 +625,20 @@ export function apply(ctx, config) {
           const dshName = toToolName(remoteName)
           const parameters = toParameters(tool.inputSchema)
           const description = String((tool && (tool.description || tool.title)) || remoteName).trim()
-          mapped.push({ name: remoteName, dshName, description, parameters })
+          // 远端若自己带了标准 annotations,以远端为准(它比名字推断更可信);
+          // 缺项或不是布尔的,退回按名字推断。
+          const inferred = annotateRemoteTool(remoteName)
+          const remoteHints = tool && tool.annotations && typeof tool.annotations === 'object' ? tool.annotations : {}
+          const hints = {}
+          for (const key of HINT_KEYS) {
+            hints[key] = typeof remoteHints[key] === 'boolean' ? remoteHints[key] : inferred[key]
+          }
+          mapped.push({ name: remoteName, dshName, description, parameters, hints })
         }
         state.tools = mapped
         for (const tool of mapped) {
           try {
-            const dispose = ctx.tools.register({
+            const dispose = ctx.tools.register(withHints({
               name: tool.dshName,
               description:
                 (tool.description || tool.name) +
@@ -564,7 +654,7 @@ export function apply(ctx, config) {
                   data: value.data,
                 }
               },
-            })
+            }, tool.hints))
             state.disposers.push(dispose)
           } catch (err) {
             skipped.push(tool.dshName)
@@ -614,7 +704,10 @@ export function apply(ctx, config) {
   }
 
   // ---- 常驻管理工具(无 Token 也要在,用来把「去设置页填 Token」讲清楚)----
-  ctx.tools.register({
+  // 四个都只读本机状态 / 只做 MCP 握手,不改远端任何数据,故 readOnly 为真、
+  // destructive 为假。mcd_test 每次都会新建一条 MCP 会话,不幂等;mcd_status、
+  // mcd_tools 重复调用结果一致,幂等。四个都要访问远端,openWorld 均为真。
+  ctx.tools.register(withHints({
     name: 'mcd_status',
     description:
       '查看麦当劳 MCP 的接入状态:是否已配置 Token、已注册多少个工具、最近一次同步/错误。' +
@@ -633,9 +726,9 @@ export function apply(ctx, config) {
       ].join('\n')
       return { ok: !state.lastError, text, data: { configured: !!state.token, endpoint: state.endpoint, count: state.disposers.length, tools: names, error: state.lastError } }
     },
-  })
+  }, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }))
 
-  ctx.tools.register({
+  ctx.tools.register(withHints({
     name: 'mcd_test',
     description:
       '测试麦当劳 MCP 连接是否可用(握手 + 拉取工具清单),返回耗时、工具数量与错误原因。' +
@@ -649,9 +742,9 @@ export function apply(ctx, config) {
         : '连接失败(' + r.ms + 'ms):' + r.error
       return { ok: r.ok, text, data: r }
     },
-  })
+  }, { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true }))
 
-  ctx.tools.register({
+  ctx.tools.register(withHints({
     name: 'mcd_tools',
     description:
       '列出麦当劳 MCP 远端全部工具(名称 + 说明)。用于确认某个能力是否存在、或查看当前可用的功能集合。',
@@ -668,9 +761,11 @@ export function apply(ctx, config) {
         return { ok: false, text: '拉取工具清单失败:' + (err && err.message ? err.message : String(err)), data: [] }
       }
     },
-  })
+  }, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }))
 
-  ctx.tools.register({
+  // mcd_call 是兜底直调,能干什么取决于远端那个工具 —— 按 MCP 的保守默认:
+  // 可能写、可能不可逆、不幂等、开放世界。绝不标成只读。
+  ctx.tools.register(withHints({
     name: 'mcd_call',
     description:
       '直接调用麦当劳 MCP 的任意工具(按远端原名),用于兜底:当某个功能没有被动态注册成独立工具、' +
@@ -696,7 +791,7 @@ export function apply(ctx, config) {
         return { ok: false, text: '调用 ' + remoteName + ' 失败:' + (err && err.message ? err.message : String(err)) }
       }
     },
-  })
+  }, { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true }))
 
   // ---- HTTP 路由:设置页读写 Token / 测试 / 刷新 ----
   const webServer = ctx.webServer ?? (ctx.get && ctx.get('webServer'))
@@ -729,8 +824,8 @@ export function apply(ctx, config) {
     const statusPayload = () => {
       const cache = readSettings().cache
       const tools = state.tools.length
-        ? state.tools.map((t) => ({ name: t.name, dshName: t.dshName, description: t.description }))
-        : (cache && Array.isArray(cache.tools) ? cache.tools.map((t) => ({ name: t.name, dshName: toToolName(t.name), description: t.description || '' })) : [])
+        ? state.tools.map((t) => ({ name: t.name, dshName: t.dshName, description: t.description, hints: t.hints }))
+        : (cache && Array.isArray(cache.tools) ? cache.tools.map((t) => ({ name: t.name, dshName: toToolName(t.name), description: t.description || '', hints: t.hints })) : [])
       return {
         ok: true,
         configured: !!state.token,

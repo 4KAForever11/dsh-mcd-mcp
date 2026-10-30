@@ -32,6 +32,23 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 - `mcd_tools` — 远端全部工具的名称与说明
 - `mcd_call` — 按远端原名直调,参数原样透传
 
+## 工具注解(读写提示)
+
+**每一个**工具——4 个常驻管理工具加全部动态远端工具——都带齐四项注解,值是明确的 `true` / `false`,不省略、不写 `undefined`:
+
+| 注解 | 含义 |
+| --- | --- |
+| `readOnlyHint` | 只读,不产生副作用 |
+| `destructiveHint` | 会造成破坏性、不可撤销的变更 |
+| `idempotentHint` | 重复执行结果一致,可安全重试 |
+| `openWorldHint` | 与外部世界交互(远端点餐服务,恒为 `true`) |
+
+远端工具的两级来源:远端 `tools/list` 若自带 `annotations`,逐项取用;**缺项才按名字推断**——`query_` / `list_` / `get_` / `calculate_` 之类前缀,或 `_list` / `_detail` / `_coupons` / `_stores` 之类后缀判为只读;`create-order`、`party-order-create`、`delivery-create-address`、`mall-create-order` 等写操作判为可写;`cancel-order`、`draw-lottery` 额外标 `destructive`;未知工具一律保守处理为「可写、不幂等」,绝不冒充只读。
+
+按官方 35 个工具实测:28 个只读、7 个可写,其中 `cancel_order` 与 `draw_lottery` 带破坏性标记。
+
+注解落在两处,宿主投影后都不丢:工具定义上的 `annotations` 字段,以及描述末尾一行机器可读的 `hints: readOnly=… destructive=… idempotent=… openWorld=…`。每条工具还带 `presentCall`,返回 DSH 的调用类型(`read` / `edit` / `delete`),DSH 在执行前就能标出读写性质。
+
 ## 端点与限流
 
 - 端点默认 `https://mcp.mcd.cn`,可在设置页改。
