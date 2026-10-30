@@ -1,5 +1,7 @@
 # dsh-mcd-mcp
 
+**简体中文** · [English](README.en.md) · [繁體中文](README.zh-TW.md)
+
 把**麦当劳中国 MCP**(`https://mcp.mcd.cn`)接进 DeepSeek Harness:
 粘一次自己的 Token,远端**全部**工具自动变成 DSH 原生工具(`mcd_` 前缀),模型可以直接下单、查券、点餐。
 
