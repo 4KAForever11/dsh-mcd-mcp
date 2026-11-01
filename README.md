@@ -9,11 +9,20 @@
 
 ## 装
 
+从 npm 装(推荐):
+
+```bash
+npm install -g dsh-mcd-mcp
+dsh plugin --profile <你的 profile> add dsh-mcd-mcp
+```
+
+或从本地目录装:
+
 ```bash
 dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 ```
 
-或在 DSH 里用 `plugin_manager`(`action: install_bundle`)指向本目录。
+或在 DSH 里用 `plugin_manager`(`action: install_bundle`)指向包名或本目录。
 
 装完重启一次 `dsh web`,打开 **设置 → 麦当劳 MCP**,把 Token 粘进去点「保存并连接」。
 

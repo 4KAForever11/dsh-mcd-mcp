@@ -10,11 +10,20 @@ paste your own token once, and every remote tool automatically becomes a native 
 
 ## Install
 
+From npm (recommended):
+
+```bash
+npm install -g dsh-mcd-mcp
+dsh plugin --profile <your-profile> add dsh-mcd-mcp
+```
+
+Or from a local checkout:
+
 ```bash
 dsh plugin --profile <your-profile> add ./dsh-mcd-mcp
 ```
 
-Or use `plugin_manager` (`action: install_bundle`) inside DSH, pointing at this directory.
+Or use `plugin_manager` (`action: install_bundle`) inside DSH, pointing at the package name or this directory.
 
 After installing, restart `dsh web` once, open **Settings → McDonald's MCP**, paste the token,
 and click **Save and connect**.

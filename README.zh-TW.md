@@ -9,11 +9,20 @@
 
 ## 安裝
 
+從 npm 安裝（推薦）：
+
+```bash
+npm install -g dsh-mcd-mcp
+dsh plugin --profile <你的 profile> add dsh-mcd-mcp
+```
+
+或從本機目錄安裝：
+
 ```bash
 dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 ```
 
-或在 DSH 裡用 `plugin_manager`（`action: install_bundle`）指向本目錄。
+或在 DSH 裡用 `plugin_manager`（`action: install_bundle`）指向套件名稱或本目錄。
 
 裝完重啟一次 `dsh web`，開啟 **設定 → 麥當勞 MCP**，把 Token 貼進去後按「儲存並連線」。
 
