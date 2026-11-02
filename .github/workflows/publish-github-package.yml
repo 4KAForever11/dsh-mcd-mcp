@@ -1,0 +1,40 @@
+name: Publish to GitHub Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+      - index.js
+      - client.js
+      - cordis.patch.yml
+      - locale/**
+      - assets/**
+      - icon.svg
+      - scripts/**
+      - test/**
+      - .github/workflows/publish-github-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '@4kaforever11'
+      - run: npm test
+      - name: Set GitHub Packages package name
+        run: npm pkg set name='@4kaforever11/dsh-mcd-mcp'
+      - name: Publish package
+        run: npm publish --registry=https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
