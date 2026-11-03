@@ -47,26 +47,77 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 
 ### 预算候选规划
 
-先查询当前门店的菜单、套餐和可用优惠,再把 1 到 5 个候选方案及其 `calculate-price` 原始参数交给 `mcd_plan_order`。插件逐项向麦当劳 MCP 核价,按官方返回的分排序,并标出预算内最低报价。
+先查询当前门店的菜单、套餐和可用优惠,再把 1 到 5 个候选方案及其 `calculate-price` 原始参数交给 `mcd_plan_order`。插件逐项向麦当劳 MCP 核价,按官方返回的分排序,并标出预算内最低报价。下面的编码仅为占位符,实际使用时要换成当前查询结果。
+
+**示例 1:预算内比较两种组合**
+
+用户想在 35 元内比较普通组合和套餐组合。所有候选使用同一门店;每个 `quoteArgs` 都按当前 `calculate-price` 工具的参数填写。
 
 ```json
 {
-  "budgetYuan": 25,
+  "budgetYuan": 35,
   "candidates": [
     {
-      "label": "普通组合",
+      "label": "汉堡加小食",
       "quoteArgs": {
         "storeCode": "门店编码",
         "orderType": 1,
         "beType": 1,
-        "items": [{ "productCode": "餐品编码", "quantity": 1 }]
+        "items": [
+          { "productCode": "汉堡编码", "quantity": 1 },
+          { "productCode": "小食编码", "quantity": 1 }
+        ]
+      }
+    },
+    {
+      "label": "套餐组合",
+      "quoteArgs": {
+        "storeCode": "门店编码",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "套餐编码", "quantity": 1 }]
       }
     }
   ]
 }
 ```
 
-仅支持同一家门店的到店自取;优惠参数必须来自当前 `calculate-price` 工具契约。结果只比较传入的候选,不保证穷举全菜单或找到全局最低价;缺少有效官方报价的候选会单独列出,不会按 0 元参与排序。此工具只核价,不创建订单。
+返回结果会列出每个有效候选的官方报价和是否在预算内,并给出预算内最低价。若两种方案都超过 35 元,会提示“没有候选方案符合预算”并显示其中最低报价。
+
+**示例 2:不设预算,只按官方报价从低到高比较**
+
+省略 `budgetYuan` 即可只比较价格。候选仍须来自同一家门店,且最多 5 个。
+
+```json
+{
+  "candidates": [
+    {
+      "label": "选项 A",
+      "quoteArgs": {
+        "storeCode": "同一家门店编码",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "餐品 A 编码", "quantity": 1 }]
+      }
+    },
+    {
+      "label": "选项 B 两份",
+      "quoteArgs": {
+        "storeCode": "同一家门店编码",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "餐品 B 编码", "quantity": 2 }]
+      }
+    }
+  ]
+}
+```
+
+**示例 3:优惠券参与核价**
+
+先用当前门店和订单场景查询可用优惠,再根据远端 `calculate-price` 工具当前公开的参数构造候选。把该工具所需的完整原始参数放进对应候选的 `quoteArgs`,插件会按官方返回金额比较;不要自行猜测券字段或根据券面金额估价。若券相关参数格式不确定,先调用 `mcd_tools` 查看当前工具说明。
+
+仅支持同一家门店的到店自取。结果只比较传入的候选,不保证穷举全菜单或找到全局最低价;缺少有效官方报价的候选会单独列出,不会按 0 元参与排序。此工具只核价,不创建订单。
 
 ## 工具注解(读写提示)
 
@@ -113,3 +164,4 @@ npm test          # 先做凭证扫描,再跑 node --test(自带 mock MCP 服务
 MIT
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/4kaforever11-dsh-mcd-mcp-1f4487?v=7f892b4c39fb3b39504f03d1b0f0ae74)](https://m8ven.ai/mcp/4kaforever11-dsh-mcd-mcp-1f4487?s=readme)
+
