@@ -289,21 +289,11 @@ function flattenToolResult(result) {
   } else if (text) {
     // 远端经常把业务数据塞成一整段 JSON 字符串,能解就解出来,前端/模型都好用
     const trimmed = text.trim()
-    const parseJson = (value) => {
-      try { return JSON.parse(value) } catch { return undefined }
-    }
-    data = parseJson(trimmed)
-    if (data === undefined) {
-      for (const [open, close] of [['{', '}'], ['[', ']']]) {
-        const start = trimmed.indexOf(open)
-        const end = trimmed.lastIndexOf(close)
-        if (start >= 0 && end > start) {
-          const embedded = parseJson(trimmed.slice(start, end + 1))
-          if (embedded !== undefined) {
-            data = embedded
-            break
-          }
-        }
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        data = JSON.parse(trimmed)
+      } catch {
+        /* 不是 JSON,保持纯文本 */
       }
     }
   }
@@ -319,10 +309,28 @@ function formatYuan(cents) {
   return (cents / 100).toFixed(2)
 }
 
+function parseEmbeddedJson(text) {
+  const trimmed = String(text || '').trim()
+  const parse = (value) => {
+    try { return JSON.parse(value) } catch { return undefined }
+  }
+  const direct = parse(trimmed)
+  if (direct !== undefined) return direct
+  for (const [open, close] of [['{', '}'], ['[', ']']]) {
+    const start = trimmed.indexOf(open)
+    const end = trimmed.lastIndexOf(close)
+    if (start >= 0 && end > start) {
+      const embedded = parse(trimmed.slice(start, end + 1))
+      if (embedded !== undefined) return embedded
+    }
+  }
+  return undefined
+}
+
 function quotePriceCents(result) {
   const flat = flattenToolResult(result)
   if (flat.isError) throw new Error(flat.text || '官方核价失败')
-  const envelope = flat.data
+  const envelope = flat.data ?? parseEmbeddedJson(flat.text)
   if (!isRecord(envelope)) throw new Error('官方核价响应缺少结构化数据')
   if (envelope.success === false) {
     throw new Error(String(envelope.message || '官方核价失败'))

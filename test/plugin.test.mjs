@@ -57,6 +57,11 @@ const REMOTE_TOOLS = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'prose-tool',
+    description: '返回普通文本，其中可能包含 JSON 示例',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
     name: 'party-order-create',
     description: '主题活动下单',
     inputSchema: {
@@ -117,6 +122,14 @@ function startMock({ requireToken = true, sessionId = 'sess-abc' } = {}) {
       }
       if (body.method === 'tools/call') {
         const name = body.params.name
+        if (name === 'prose-tool') {
+          send({
+            jsonrpc: '2.0',
+            id: body.id,
+            result: { content: [{ type: 'text', text: '说明文字：示例参数 {"fake":true}，请勿直接使用。' }], isError: false },
+          })
+          return
+        }
         if (name === 'calculate-price') {
           const productCode = String(body.params.arguments?.items?.[0]?.productCode || '')
           const match = /fixture-price-(\d+)$/.exec(productCode)
@@ -464,6 +477,22 @@ test('mcd_plan_order extracts an official quote embedded in response text', asyn
     }, {})
     assert.equal(result.ok, true)
     assert.equal(result.data.results[0].priceCents, 1990)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('ordinary tool prose does not become structured data just because it contains JSON-looking text', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const result = await ctx._tools.get('mcd_prose_tool').execute({}, {})
+    assert.equal(result.ok, true)
+    assert.equal(result.data, undefined)
+    assert.match(result.text, /示例参数/)
   } finally {
     await mock.close()
     rmSync(HOME, { recursive: true, force: true })
