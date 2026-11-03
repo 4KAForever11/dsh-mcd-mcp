@@ -35,6 +35,7 @@ and click **Save and connect**.
 | Protocol | Ships a minimal MCP client: JSON-RPC 2.0 + Streamable HTTP, handshake → `tools/list` → `tools/call`, supporting both `application/json` and `text/event-stream` responses |
 | Tools | Remote tools are **dynamically** registered as `mcd_<original-name>` (add or remove tools upstream, restart to resync — no code changes) |
 | Fallback | `mcd_call` calls any tool by its original remote name; `mcd_tools` lists them all |
+| Budget planning | `mcd_plan_order` gets official `calculate-price` quotes for up to 5 candidates and compares them against a budget |
 | Self-check | Two resident tools, `mcd_status` / `mcd_test`, plus a **Test connection** button in Settings |
 | Storage | The token lives in `~/.dsh/dsh-mcd-mcp.json` (mode 0600) — never in the conversation context, never written into the settings patch |
 
@@ -44,10 +45,34 @@ Resident management tools (usable even without a token; they say plainly when no
 - `mcd_test` — handshake + fetch the tool list; reports elapsed time, tool count, and failure reason
 - `mcd_tools` — the names and descriptions of every remote tool
 - `mcd_call` — call any tool by its original remote name, arguments passed through as-is
+- `mcd_plan_order` — quote and compare candidate meals; it never creates an order
+
+### Budget planning
+
+First query the current store's menu, meal details, and available coupons. Then pass 1 to 5 candidate meals and their original `calculate-price` arguments to `mcd_plan_order`. The plugin requests an official quote for each candidate, sorts by the returned amount in cents, and identifies the lowest quote within budget.
+
+```json
+{
+  "budgetYuan": 25,
+  "candidates": [
+    {
+      "label": "Regular combination",
+      "quoteArgs": {
+        "storeCode": "STORE_CODE",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "PRODUCT_CODE", "quantity": 1 }]
+      }
+    }
+  ]
+}
+```
+
+The first release supports pickup at one store. Coupon fields must follow the current `calculate-price` contract. Results compare only the candidates supplied; they do not exhaust the full menu or guarantee a global minimum. A candidate without a valid official quote is reported separately and never treated as a zero-price meal. This tool only quotes; it does not create orders.
 
 ## Tool annotations (read/write hints)
 
-**Every** tool — the 4 resident management tools plus all dynamically registered remote tools —
+**Every** tool — the 5 built-in tools plus all dynamically registered remote tools —
 carries all four annotations, with explicit `true` / `false` values: never omitted, never `undefined`.
 
 | Annotation | Meaning |
@@ -101,8 +126,9 @@ npm test          # secret scan first, then node --test (bundled mock MCP server
 ```
 
 The local mock covers: parameter schema conversion, handshake and session headers, dynamic
-registration, real `tools/call`, no-token degradation, 401 attribution, SSE response parsing, and
-the settings routes (including the non-loopback rejection).
+registration, real `tools/call`, budget and candidate limits, official quote parsing, no-token
+degradation, 401 attribution, SSE response parsing, and the settings routes (including the
+non-loopback rejection).
 
 ## License
 

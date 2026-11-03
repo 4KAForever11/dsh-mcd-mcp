@@ -3,7 +3,7 @@
 **简体中文** · [English](README.en.md) · [繁體中文](README.zh-TW.md)
 
 把**麦当劳中国 MCP**(`https://mcp.mcd.cn`)接进 DeepSeek Harness:
-粘一次自己的 Token,远端**全部**工具自动变成 DSH 原生工具(`mcd_` 前缀),模型可以直接下单、查券、点餐。
+粘一次自己的 Token,远端**全部**工具自动变成 DSH 原生工具(`mcd_` 前缀),模型可以查券、点餐、核价和创建订单。
 
 > Token 由你自己去 <https://open.mcd.cn/mcp> 生成,插件不内置任何凭证。
 
@@ -33,6 +33,7 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 | 协议 | 自带最小 MCP 客户端:JSON-RPC 2.0 + Streamable HTTP,握手 → `tools/list` → `tools/call`,兼容 `application/json` 与 `text/event-stream` 两种响应 |
 | 工具 | 远端工具**动态**注册成 `mcd_<原名>`(远端增删工具,重启即同步,不用改代码) |
 | 兜底 | `mcd_call` 可直接按远端原名调用,`mcd_tools` 列清单 |
+| 预算规划 | `mcd_plan_order` 对最多 5 个候选调用官方 `calculate-price`,按实时报价和预算比较 |
 | 自检 | `mcd_status` / `mcd_test` 两个常驻工具 + 设置页「测试连接」按钮 |
 | 存储 | Token 落在 `~/.dsh/dsh-mcd-mcp.json`(0600),不进对话上下文、不写进设置 patch |
 
@@ -42,10 +43,34 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 - `mcd_test` — 握手 + 拉清单,返回耗时、工具数量、失败原因
 - `mcd_tools` — 远端全部工具的名称与说明
 - `mcd_call` — 按远端原名直调,参数原样透传
+- `mcd_plan_order` — 核价并比较候选餐单,不会创建订单
+
+### 预算候选规划
+
+先查询当前门店的菜单、套餐和可用优惠,再把 1 到 5 个候选方案及其 `calculate-price` 原始参数交给 `mcd_plan_order`。插件逐项向麦当劳 MCP 核价,按官方返回的分排序,并标出预算内最低报价。
+
+```json
+{
+  "budgetYuan": 25,
+  "candidates": [
+    {
+      "label": "普通组合",
+      "quoteArgs": {
+        "storeCode": "门店编码",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "餐品编码", "quantity": 1 }]
+      }
+    }
+  ]
+}
+```
+
+仅支持同一家门店的到店自取;优惠参数必须来自当前 `calculate-price` 工具契约。结果只比较传入的候选,不保证穷举全菜单或找到全局最低价;缺少有效官方报价的候选会单独列出,不会按 0 元参与排序。此工具只核价,不创建订单。
 
 ## 工具注解(读写提示)
 
-**每一个**工具——4 个常驻管理工具加全部动态远端工具——都带齐四项注解,值是明确的 `true` / `false`,不省略、不写 `undefined`:
+**每一个**工具——5 个内置工具加全部动态远端工具——都带齐四项注解,值是明确的 `true` / `false`,不省略、不写 `undefined`:
 
 | 注解 | 含义 |
 | --- | --- |
@@ -81,7 +106,7 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 npm test          # 先做凭证扫描,再跑 node --test(自带 mock MCP 服务器,不联网)
 ```
 
-测试用本地 mock 覆盖:参数 schema 转换、握手与会话头、动态注册、真实 `tools/call`、无 Token 降级、401 归因、SSE 响应解析、设置页路由(含非回环拒绝)。
+测试用本地 mock 覆盖:参数 schema 转换、握手与会话头、动态注册、真实 `tools/call`、预算/候选边界与官方报价解析、无 Token 降级、401 归因、SSE 响应解析、设置页路由(含非回环拒绝)。
 
 ## 许可
 

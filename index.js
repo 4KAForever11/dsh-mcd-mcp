@@ -26,7 +26,7 @@ export const name = 'dsh-mcd-mcp'
 export const inject = ['tools', 'webServer']
 
 const PLUGIN_NAME = 'dsh-mcd-mcp'
-const PLUGIN_VERSION = '0.1.0'
+const PLUGIN_VERSION = '0.2.0'
 const DEFAULT_ENDPOINT = 'https://mcp.mcd.cn'
 const PROTOCOL_VERSION = '2025-06-18'
 const ROUTE = '/dsh-mcd-mcp-api'
@@ -289,16 +289,85 @@ function flattenToolResult(result) {
   } else if (text) {
     // 远端经常把业务数据塞成一整段 JSON 字符串,能解就解出来,前端/模型都好用
     const trimmed = text.trim()
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-      try {
-        data = JSON.parse(trimmed)
-      } catch {
-        /* 不是 JSON,保持纯文本 */
+    const parseJson = (value) => {
+      try { return JSON.parse(value) } catch { return undefined }
+    }
+    data = parseJson(trimmed)
+    if (data === undefined) {
+      for (const [open, close] of [['{', '}'], ['[', ']']]) {
+        const start = trimmed.indexOf(open)
+        const end = trimmed.lastIndexOf(close)
+        if (start >= 0 && end > start) {
+          const embedded = parseJson(trimmed.slice(start, end + 1))
+          if (embedded !== undefined) {
+            data = embedded
+            break
+          }
+        }
       }
     }
   }
   if (!text && data !== undefined) text = JSON.stringify(data, null, 2)
   return { isError: !!(result && result.isError), text, data }
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function formatYuan(cents) {
+  return (cents / 100).toFixed(2)
+}
+
+function quotePriceCents(result) {
+  const flat = flattenToolResult(result)
+  if (flat.isError) throw new Error(flat.text || '官方核价失败')
+  const envelope = flat.data
+  if (!isRecord(envelope)) throw new Error('官方核价响应缺少结构化数据')
+  if (envelope.success === false) {
+    throw new Error(String(envelope.message || '官方核价失败'))
+  }
+  if (envelope.code != null && String(envelope.code) !== '200') {
+    throw new Error(String(envelope.message || '官方核价失败（状态码 ' + envelope.code + '）'))
+  }
+  const payload = isRecord(envelope.data) ? envelope.data : envelope
+  const rawPrice = payload.price
+  const price = typeof rawPrice === 'number'
+    ? rawPrice
+    : typeof rawPrice === 'string' && /^\d+$/.test(rawPrice.trim())
+      ? Number(rawPrice.trim())
+      : NaN
+  if (!Number.isSafeInteger(price) || price < 0) {
+    throw new Error('官方核价未返回有效的 price（单位：分）')
+  }
+  const rawDiscount = payload.discount
+  const discount = typeof rawDiscount === 'number'
+    ? rawDiscount
+    : typeof rawDiscount === 'string' && /^\d+$/.test(rawDiscount.trim())
+      ? Number(rawDiscount.trim())
+      : NaN
+  return {
+    priceCents: price,
+    discountCents: Number.isSafeInteger(discount) && discount >= 0
+      ? discount
+      : null,
+  }
+}
+
+function validateQuoteArgs(value) {
+  if (!isRecord(value)) return 'quoteArgs 必须是对象'
+  if (typeof value.storeCode !== 'string' || !value.storeCode.trim()) return '必须提供 storeCode'
+  if (value.orderType !== 1 || value.beType !== 1) return '首版仅支持到店自取（orderType=1、beType=1）'
+  if (!Array.isArray(value.items) || value.items.length === 0) return 'items 必须是非空商品数组'
+  for (const [index, item] of value.items.entries()) {
+    if (!isRecord(item) || typeof item.productCode !== 'string' || !item.productCode.trim()) {
+      return 'items[' + index + '].productCode 必须是非空字符串'
+    }
+    if (!Number.isSafeInteger(item.quantity) || item.quantity < 1) {
+      return 'items[' + index + '].quantity 必须是正整数'
+    }
+  }
+  return ''
 }
 
 // ---------------------------------------------------------------- 工具 schema
@@ -792,6 +861,153 @@ export function apply(ctx, config) {
       }
     },
   }, { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true }))
+
+  ctx.tools.register(withHints({
+    name: 'mcd_plan_order',
+    description:
+      '比较 1 到 5 个麦当劳候选餐单并返回官方 calculate-price 实时报价与预算内最低价。' +
+      '先用当前门店菜单、套餐和优惠券工具准备候选；quoteArgs 必须是 calculate-price 的原始参数。' +
+      '首版只支持同一门店到店自取，不会创建订单；缺少官方 price 时该候选不会参与比较。',
+    parameters: {
+      type: 'object',
+      properties: {
+        budgetYuan: { type: 'number', description: '可选预算，单位元；未提供时只按官方报价排序' },
+        candidates: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              label: { type: 'string', description: '可读的餐单说明，注明餐品或使用的优惠' },
+              quoteArgs: {
+                type: 'object',
+                properties: {
+                  storeCode: { type: 'string' },
+                  orderType: { type: 'integer' },
+                  beType: { type: 'integer' },
+                  items: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        productCode: { type: 'string' },
+                        quantity: { type: 'integer' },
+                      },
+                      required: ['productCode', 'quantity'],
+                      additionalProperties: true,
+                    },
+                  },
+                },
+                required: ['storeCode', 'orderType', 'beType', 'items'],
+                additionalProperties: true,
+              },
+            },
+            required: ['label', 'quoteArgs'],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ['candidates'],
+      additionalProperties: false,
+    },
+    output: RESULT_OUTPUT,
+    async execute(args, exec) {
+      if (!state.token) {
+        return { ok: false, text: '未配置 MCP Token，请先在 DSH 设置 → 麦当劳 MCP 中配置。', data: { results: [], failures: [] } }
+      }
+      const candidates = args && args.candidates
+      if (!Array.isArray(candidates) || candidates.length === 0) {
+        return { ok: false, text: '请提供至少 1 个候选餐单。', data: { results: [], failures: [] } }
+      }
+      if (candidates.length > 5) {
+        return { ok: false, text: '每次最多 5 个候选餐单。', data: { results: [], failures: [] } }
+      }
+      const hasBudget = args.budgetYuan !== undefined
+      const budget = hasBudget ? Number(args.budgetYuan) : null
+      if (hasBudget && (typeof args.budgetYuan !== 'number' || !Number.isFinite(budget) || budget < 0)) {
+        return { ok: false, text: 'budgetYuan 必须是大于或等于 0 的金额。', data: { results: [], failures: [] } }
+      }
+      const budgetCents = hasBudget ? Math.round(budget * 100) : null
+      if (budgetCents != null && !Number.isSafeInteger(budgetCents)) {
+        return { ok: false, text: 'budgetYuan 超出可安全换算为分的金额范围。', data: { results: [], failures: [] } }
+      }
+      const candidateStores = new Set(candidates
+        .filter((candidate) => !validateQuoteArgs(candidate && candidate.quoteArgs))
+        .map((candidate) => candidate.quoteArgs.storeCode))
+      if (candidateStores.size > 1) {
+        const failures = candidates.map((candidate, index) => ({
+          label: String((candidate && candidate.label) || '候选 ' + (index + 1)).trim(),
+          error: '所有候选必须使用同一家门店。',
+        }))
+        return {
+          ok: false,
+          text: '所有候选必须使用同一家门店；本轮未发起任何核价。',
+          data: { storeCode: null, budgetYuan: budgetCents == null ? null : formatYuan(budgetCents), results: [], bestOption: null, bestWithinBudget: null, failures },
+        }
+      }
+      const quoteTool = state.tools.find((tool) =>
+        String(tool.name || '').toLowerCase().replace(/-/g, '_') === 'calculate_price',
+      )
+      if (!quoteTool) {
+        return { ok: false, text: '当前麦当劳 MCP 工具清单中没有 calculate-price，无法进行官方核价。', data: { results: [], failures: [] } }
+      }
+
+      let storeCode = ''
+      const failures = []
+      const results = []
+      for (const [index, candidate] of candidates.entries()) {
+        const label = String((candidate && candidate.label) || '候选 ' + (index + 1)).trim()
+        const quoteArgs = candidate && candidate.quoteArgs
+        const invalid = validateQuoteArgs(quoteArgs)
+        if (invalid) {
+          failures.push({ label, error: invalid })
+          continue
+        }
+        if (storeCode && storeCode !== quoteArgs.storeCode) {
+          failures.push({ label, error: '所有候选必须使用同一家门店。' })
+          continue
+        }
+        storeCode = quoteArgs.storeCode
+        try {
+          const response = await client().callTool(quoteTool.name, quoteArgs, { signal: exec && exec.signal })
+          const quote = quotePriceCents(response)
+          results.push({
+            label,
+            priceCents: quote.priceCents,
+            priceYuan: formatYuan(quote.priceCents),
+            discountCents: quote.discountCents,
+            discountYuan: quote.discountCents == null ? null : formatYuan(quote.discountCents),
+            withinBudget: budgetCents == null ? null : quote.priceCents <= budgetCents,
+          })
+        } catch (err) {
+          failures.push({ label, error: err && err.message ? err.message : String(err) })
+        }
+      }
+
+      results.sort((a, b) => a.priceCents - b.priceCents || a.label.localeCompare(b.label))
+      const bestOption = results[0] || null
+      const bestWithinBudget = budgetCents == null
+        ? null
+        : results.find((result) => result.priceCents <= budgetCents) || null
+      const data = {
+        storeCode: storeCode || null,
+        budgetYuan: budgetCents == null ? null : formatYuan(budgetCents),
+        results,
+        bestOption,
+        bestWithinBudget,
+        failures,
+      }
+      const lines = results.map((result) =>
+        result.label + ': ¥' + result.priceYuan +
+        (result.discountYuan == null ? '' : '（优惠 ¥' + result.discountYuan + '）') +
+        (result.withinBudget === null ? '' : result.withinBudget ? '，预算内' : '，超预算'),
+      )
+      if (bestWithinBudget) lines.unshift('预算内最低价：' + bestWithinBudget.label + '，¥' + bestWithinBudget.priceYuan)
+      else if (budgetCents != null && bestOption) lines.unshift('没有候选方案符合预算；最低报价为 ¥' + bestOption.priceYuan)
+      if (failures.length) lines.push('未能核价的候选：' + failures.map((failure) => failure.label + '（' + failure.error + '）').join('；'))
+      if (!results.length) lines.push('没有可用于比较的有效官方报价。')
+      return { ok: results.length > 0, text: lines.join('\n'), data }
+    },
+  }, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }))
 
   // ---- HTTP 路由:设置页读写 Token / 测试 / 刷新 ----
   const webServer = ctx.webServer ?? (ctx.get && ctx.get('webServer'))

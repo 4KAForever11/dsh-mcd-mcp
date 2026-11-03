@@ -26,6 +26,27 @@ const { apply, toParameters, toToolName, HINT_KEYS } = await import('../index.js
 
 const REMOTE_TOOLS = [
   {
+    name: 'calculate-price',
+    description: '按当前门店和商品计算整单应付金额',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        storeCode: { type: 'string' },
+        orderType: { type: 'integer' },
+        beType: { type: 'integer' },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { productCode: { type: 'string' }, quantity: { type: 'integer' } },
+            required: ['productCode', 'quantity'],
+          },
+        },
+      },
+      required: ['storeCode', 'orderType', 'beType', 'items'],
+    },
+  },
+  {
     name: 'order-list',
     description: '查询我的历史订单',
     inputSchema: { type: 'object', properties: { page: { type: 'integer', minimum: 1 } }, required: [] },
@@ -58,7 +79,12 @@ function startMock({ requireToken = true, sessionId = 'sess-abc' } = {}) {
     req.on('data', (c) => chunks.push(c))
     req.on('end', () => {
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')
-      calls.push({ method: body.method, name: body.params && body.params.name, headers: req.headers })
+      calls.push({
+        method: body.method,
+        name: body.params && body.params.name,
+        arguments: body.params && body.params.arguments,
+        headers: req.headers,
+      })
 
       if (requireToken) {
         const auth = String(req.headers.authorization || '')
@@ -91,6 +117,24 @@ function startMock({ requireToken = true, sessionId = 'sess-abc' } = {}) {
       }
       if (body.method === 'tools/call') {
         const name = body.params.name
+        if (name === 'calculate-price') {
+          const productCode = String(body.params.arguments?.items?.[0]?.productCode || '')
+          const match = /fixture-price-(\d+)$/.exec(productCode)
+          const quote = productCode === 'missing-price'
+            ? { success: true, code: 200, message: '请求成功', data: { discount: 0 } }
+            : match
+            ? { success: true, code: 200, message: '请求成功', data: { price: Number(match[1]), discount: 100, productPrice: Number(match[1]) + 100 } }
+            : { success: false, code: 400, message: '没有有效报价', data: {} }
+          const responseText = productCode === 'wrapped-price'
+            ? '官方核价结果：' + JSON.stringify({ success: true, code: 200, message: '请求成功', data: { price: 1990, discount: 50 } }) + '。'
+            : JSON.stringify(quote)
+          send({
+            jsonrpc: '2.0',
+            id: body.id,
+            result: { content: [{ type: 'text', text: responseText }], isError: false },
+          })
+          return
+        }
         send({
           jsonrpc: '2.0',
           id: body.id,
@@ -162,7 +206,7 @@ test('toToolName:统一前缀 + 只留安全字符', () => {
 })
 
 test('toParameters:生成 DSH 子集认可的 object-rooted schema', () => {
-  const params = toParameters(REMOTE_TOOLS[2].inputSchema)
+  const params = toParameters(REMOTE_TOOLS.find((tool) => tool.name === 'party-order-create').inputSchema)
   assert.equal(params.type, 'object')
   assert.deepEqual(Object.keys(params.properties).sort(), ['items', 'storeCode'])
   assert.deepEqual(params.required, ['storeCode'])
@@ -268,11 +312,12 @@ test('有 Token:握手 + 动态注册全部远端工具,execute 能调通', asyn
   }
 })
 
-test('无 Token:只有管理工具,并给出可操作的提示', async () => {
+test('无 Token:管理工具和点餐规划工具都在,并给出可操作的提示', async () => {
   const ctx = fakeCtx()
   apply(ctx, { endpoint: 'http://127.0.0.1:1', token: '' })
   await settle(150)
-  assert.equal(ctx._tools.size, 4, '无 Token 时不该注册远端工具')
+  assert.equal(ctx._tools.size, 5, '无 Token 时不该注册远端工具')
+  assert.ok(ctx._tools.has('mcd_plan_order'), '未配置 Token 时点餐规划工具仍应说明如何配置')
   const status = await ctx._tools.get('mcd_status').execute({}, {})
   assert.equal(status.data.configured, false)
   assert.match(status.text, /未配置/)
@@ -282,13 +327,181 @@ test('无 Token:只有管理工具,并给出可操作的提示', async () => {
   assert.match(test1.text, /未配置/)
 })
 
+test('mcd_plan_order uses official quotes, sorts by cents, applies the budget, and never writes', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+
+    const planner = ctx._tools.get('mcd_plan_order')
+    assert.ok(planner, '缺少预算点餐规划工具')
+    const quoteArgs = (price) => ({
+      storeCode: 'demo-store',
+      orderType: 1,
+      beType: 1,
+      items: [{ productCode: 'fixture-price-' + price, quantity: 1 }],
+    })
+    const planned = await planner.execute({
+      budgetYuan: 25,
+      candidates: [
+        { label: '常规组合', quoteArgs: quoteArgs(3350) },
+        { label: '优惠组合', quoteArgs: quoteArgs(2190) },
+        { label: '替换组合', quoteArgs: quoteArgs(2500) },
+      ],
+    }, {})
+
+    assert.equal(planned.ok, true)
+    assert.deepEqual(planned.data.results.map((row) => [row.label, row.priceCents, row.withinBudget]), [
+      ['优惠组合', 2190, true],
+      ['替换组合', 2500, true],
+      ['常规组合', 3350, false],
+    ])
+    assert.equal(planned.data.bestWithinBudget.label, '优惠组合')
+    assert.equal(planned.data.results[0].priceYuan, '21.90')
+
+    const quoteCalls = mock.calls.filter((call) => call.method === 'tools/call')
+    assert.equal(quoteCalls.length, 3)
+    assert.ok(quoteCalls.every((call) => call.name === 'calculate-price'), '报价之外不应调用任何远端工具')
+    assert.deepEqual(quoteCalls.map((call) => call.arguments), [
+      quoteArgs(3350), quoteArgs(2190), quoteArgs(2500),
+    ], '报价参数必须原样传给官方 calculate-price')
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('mcd_plan_order rejects a successful quote envelope without price instead of treating it as zero', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const result = await ctx._tools.get('mcd_plan_order').execute({
+      candidates: [{
+        label: '无报价候选',
+        quoteArgs: {
+          storeCode: 'demo-store', orderType: 1, beType: 1,
+          items: [{ productCode: 'missing-price', quantity: 1 }],
+        },
+      }],
+    }, {})
+
+    assert.equal(result.ok, false)
+    assert.equal(result.data.results.length, 0)
+    assert.equal(result.data.failures[0].label, '无报价候选')
+    assert.match(result.data.failures[0].error, /price.*(分|有效)/i)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('mcd_plan_order rejects mixed-store candidates before making any quote call', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const quoteArgs = (storeCode) => ({
+      storeCode, orderType: 1, beType: 1,
+      items: [{ productCode: 'fixture-price-1000', quantity: 1 }],
+    })
+    const result = await ctx._tools.get('mcd_plan_order').execute({
+      candidates: [
+        { label: '门店 A', quoteArgs: quoteArgs('store-a') },
+        { label: '门店 B', quoteArgs: quoteArgs('store-b') },
+      ],
+    }, {})
+
+    assert.equal(result.ok, false)
+    assert.match(result.text, /同一家门店/)
+    assert.equal(mock.calls.filter((call) => call.method === 'tools/call').length, 0)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('mcd_plan_order rejects more than five candidates before making quote calls', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const quoteArgs = {
+      storeCode: 'demo-store', orderType: 1, beType: 1,
+      items: [{ productCode: 'fixture-price-1000', quantity: 1 }],
+    }
+    const result = await ctx._tools.get('mcd_plan_order').execute({
+      candidates: Array.from({ length: 6 }, (_, index) => ({ label: '方案' + index, quoteArgs })),
+    }, {})
+
+    assert.equal(result.ok, false)
+    assert.match(result.text, /最多 5 个候选/)
+    assert.equal(mock.calls.filter((call) => call.method === 'tools/call').length, 0)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('mcd_plan_order extracts an official quote embedded in response text', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const result = await ctx._tools.get('mcd_plan_order').execute({
+      candidates: [{
+        label: '文字包裹报价',
+        quoteArgs: {
+          storeCode: 'demo-store', orderType: 1, beType: 1,
+          items: [{ productCode: 'wrapped-price', quantity: 1 }],
+        },
+      }],
+    }, {})
+    assert.equal(result.ok, true)
+    assert.equal(result.data.results[0].priceCents, 1990)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
+test('mcd_plan_order rejects a budget whose cents cannot be represented safely', async () => {
+  const mock = await startMock()
+  const ctx = fakeCtx()
+  try {
+    apply(ctx, { endpoint: mock.url, token: 'good-token' })
+    await settle(400)
+    const result = await ctx._tools.get('mcd_plan_order').execute({
+      budgetYuan: Number.MAX_SAFE_INTEGER,
+      candidates: [{
+        label: '候选',
+        quoteArgs: {
+          storeCode: 'demo-store', orderType: 1, beType: 1,
+          items: [{ productCode: 'fixture-price-1000', quantity: 1 }],
+        },
+      }],
+    }, {})
+    assert.equal(result.ok, false)
+    assert.match(result.text, /金额范围|安全整数/)
+    assert.equal(mock.calls.filter((call) => call.method === 'tools/call').length, 0)
+  } finally {
+    await mock.close()
+    rmSync(HOME, { recursive: true, force: true })
+  }
+})
+
 test('Token 无效:401 被翻译成可读错误,而不是静默空清单', async () => {
   const mock = await startMock()
   const ctx = fakeCtx()
   try {
     apply(ctx, { endpoint: mock.url, token: 'bad-token' })
     await settle(400)
-    assert.equal(ctx._tools.size, 4, '401 时不应注册远端工具')
+    assert.equal(ctx._tools.size, 5, '401 时不应注册远端工具')
     const status = await ctx._tools.get('mcd_status').execute({}, {})
     assert.match(status.text, /Token 无效|401/)
     const test1 = await ctx._tools.get('mcd_test').execute({}, {})
@@ -351,7 +564,7 @@ test('设置页路由:状态 / 保存 Token / 测试连通性', async () => {
 
     const cleared = await call('POST', '/dsh-mcd-mcp-api', { action: 'clear' })
     assert.equal(cleared.body.configured, false)
-    assert.equal(ctx._tools.size, 4)
+    assert.equal(ctx._tools.size, 5)
 
     // 非回环请求必须拒掉(Token 是凭据,不能给局域网)
     const denied = await new Promise((resolve) => {

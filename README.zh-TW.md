@@ -33,6 +33,7 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 | 協定 | 自帶最小 MCP 用戶端：JSON-RPC 2.0 + Streamable HTTP，握手 → `tools/list` → `tools/call`，同時支援 `application/json` 與 `text/event-stream` 兩種回應 |
 | 工具 | 遠端工具**動態**註冊成 `mcd_<原名>`（遠端增刪工具，重啟即同步，不必改程式碼） |
 | 備援 | `mcd_call` 可直接用遠端原名呼叫，`mcd_tools` 列出清單 |
+| 預算規劃 | `mcd_plan_order` 對最多 5 個候選呼叫官方 `calculate-price`，依即時報價與預算比較 |
 | 自檢 | `mcd_status` / `mcd_test` 兩個常駐工具，加上設定頁的「測試連線」按鈕 |
 | 儲存 | Token 放在 `~/.dsh/dsh-mcd-mcp.json`（權限 0600），不進對話上下文、不寫進設定檔 |
 
@@ -42,10 +43,34 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 - `mcd_test` — 握手 + 取得清單，回報耗時、工具數量、失敗原因
 - `mcd_tools` — 遠端全部工具的名稱與說明
 - `mcd_call` — 依遠端原名直接呼叫，參數原樣透傳
+- `mcd_plan_order` — 核價並比較候選餐點，不會建立訂單
+
+### 預算候選規劃
+
+先查詢目前門市的菜單、套餐與可用優惠，再將 1 到 5 個候選方案及其 `calculate-price` 原始參數交給 `mcd_plan_order`。外掛會逐項向麥當勞 MCP 核價，依官方回傳的分排序，並標出預算內最低報價。
+
+```json
+{
+  "budgetYuan": 25,
+  "candidates": [
+    {
+      "label": "一般組合",
+      "quoteArgs": {
+        "storeCode": "門市代碼",
+        "orderType": 1,
+        "beType": 1,
+        "items": [{ "productCode": "餐點代碼", "quantity": 1 }]
+      }
+    }
+  ]
+}
+```
+
+首版僅支援同一家門市的到店自取；優惠參數必須符合目前 `calculate-price` 工具契約。結果只比較傳入的候選，不保證窮舉完整菜單或找到全域最低價；缺少有效官方報價的候選會另外列出，不會以 0 元參與排序。此工具只核價，不會建立訂單。
 
 ## 工具註解（讀寫提示）
 
-**每一個**工具——4 個常駐管理工具加上全部動態遠端工具——都帶齊四項註解，值是明確的 `true` / `false`，不省略、不寫 `undefined`：
+**每一個**工具——5 個內建工具加上全部動態遠端工具——都帶齊四項註解，值是明確的 `true` / `false`，不省略、不寫 `undefined`：
 
 | 註解 | 含義 |
 | --- | --- |
@@ -81,7 +106,7 @@ dsh plugin --profile <你的 profile> add ./dsh-mcd-mcp
 npm test          # 先做憑證掃描，再跑 node --test（自帶 mock MCP 伺服器，不連網）
 ```
 
-測試用本機 mock 涵蓋：參數 schema 轉換、握手與工作階段標頭、動態註冊、真實 `tools/call`、無 Token 降級、401 歸因、SSE 回應解析、設定頁路由（含非回環拒絕）。
+測試用本機 mock 涵蓋：參數 schema 轉換、握手與工作階段標頭、動態註冊、真實 `tools/call`、預算與候選數量邊界、官方報價解析、無 Token 降級、401 歸因、SSE 回應解析、設定頁路由（含非回環拒絕）。
 
 ## 授權
 

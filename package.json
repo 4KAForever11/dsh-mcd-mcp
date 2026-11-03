@@ -1,6 +1,6 @@
 {
   "name": "dsh-mcd-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "McDonald's China MCP (mcp.mcd.cn) for DeepSeek Harness — paste your own token and every remote tool registers as a native DSH tool. 麦当劳中国 MCP 接入 DSH 插件。",
   "keywords": [
     "dsh-plugin",

@@ -1,3 +1,26 @@
+# dsh-mcd-mcp v0.2.0
+
+## 新功能
+
+- 新增 `mcd_plan_order`:對最多 5 個候選餐單呼叫官方 `calculate-price`,按實時報價排序並標示預算內最低價。
+- 限定單一門店到店自取;拒絕混用門店的候選,缺少有效報價時不參與排序。
+- 規劃工具僅核價,不會建立訂單;只比較傳入的候選,不宣稱全菜單全域最優。
+- 更新簡體中文、繁體中文與英文使用說明。
+
+## 校驗
+
+- `npm test` → 13 個本機 mock 用例通過;不會讀取或修改真實 Token 設定。
+- `npm pack --dry-run` 可檢查套件清單;`prepublishOnly` 會再次執行憑證掃描與測試。
+
+## 安裝
+
+```bash
+npm install -g dsh-mcd-mcp@0.2.0
+dsh plugin --profile <你的 profile> add dsh-mcd-mcp
+```
+
+---
+
 # dsh-mcd-mcp v0.1.0
 
 把**麦当劳中国 MCP**（`https://mcp.mcd.cn`）接进 DeepSeek Harness 的插件。粘一次自己的
