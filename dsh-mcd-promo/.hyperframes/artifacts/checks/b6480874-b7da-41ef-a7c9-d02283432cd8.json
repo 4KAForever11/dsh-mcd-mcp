@@ -1,0 +1,876 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 35,
+    "samples": [
+      1.944,
+      5.833,
+      9.722,
+      13.611,
+      17.5,
+      21.389,
+      25.278,
+      29.167,
+      33.056
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      1.944,
+      9.722,
+      17.5,
+      25.278,
+      33.056
+    ],
+    "checked": 88,
+    "passed": 88
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 92 text elements stay under it for 0.5 s or more, the smallest \"本次预算\" at 16 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "本次预算",
+        "selector": "div.budget > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1013.91,
+          "y": 253.5,
+          "width": 64,
+          "height": 20
+        },
+        "time": 19.75,
+        "times": [
+          0,
+          0,
+          0,
+          0.375,
+          1.25,
+          1.25,
+          6.375,
+          6.375,
+          6.375,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          6.625,
+          7.25,
+          7.625,
+          7.625,
+          7.75,
+          7.75,
+          7.875,
+          7.875,
+          13,
+          13,
+          13,
+          13.125,
+          13.25,
+          13.25,
+          13.25,
+          13.5,
+          13.5,
+          13.625,
+          13.625,
+          13.75,
+          13.75,
+          13.75,
+          13.75,
+          13.875,
+          13.875,
+          13.875,
+          13.875,
+          13.875,
+          13.875,
+          14,
+          14,
+          14.25,
+          19.5,
+          19.5,
+          19.5,
+          19.75,
+          19.75,
+          19.75,
+          19.75,
+          19.75,
+          19.75,
+          20.25,
+          20.25,
+          20.25,
+          20.375,
+          20.375,
+          20.375,
+          20.375,
+          20.375,
+          20.375,
+          20.375,
+          20.5,
+          20.625,
+          20.625,
+          20.875,
+          26.125,
+          26.125,
+          26.125,
+          26.375,
+          26.625,
+          26.625,
+          26.75,
+          26.75,
+          26.875,
+          26.875,
+          27,
+          27,
+          27.125,
+          27.625
+        ],
+        "fontPx": 16,
+        "floorPx": 28,
+        "seconds": 6.625,
+        "elements": [
+          {
+            "selector": "div.budget > span:nth-of-type(1)",
+            "text": "本次预算",
+            "fontPx": 16,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#scene-1 > div:nth-of-type(2)",
+            "text": "DSH PLUGIN / 01",
+            "fontPx": 18,
+            "time": 0,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#scene-2 > div:nth-of-type(1)",
+            "text": "SETUP / 02",
+            "fontPx": 18,
+            "time": 6.375,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "1",
+            "fontPx": 18,
+            "time": 7.625,
+            "seconds": 5.5
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "2",
+            "fontPx": 18,
+            "time": 7.75,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "3",
+            "fontPx": 18,
+            "time": 7.875,
+            "seconds": 5.25
+          },
+          {
+            "selector": "#scene-3 > div:nth-of-type(1)",
+            "text": "DYNAMIC TOOLS / 03",
+            "fontPx": 18,
+            "time": 13,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#s3-foot",
+            "text": "服务端工具有变化时，插件可重新同步清单。具体可用工具以远端当前返回为准。",
+            "fontPx": 18,
+            "time": 14.25,
+            "seconds": 5.5
+          },
+          {
+            "selector": "#scene-4 > div:nth-of-type(1)",
+            "text": "BUDGET PLANNER / 04",
+            "fontPx": 18,
+            "time": 19.5,
+            "seconds": 6.875
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "方案 A",
+            "fontPx": 18,
+            "time": 20.25,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "餐品组合 A",
+            "fontPx": 18,
+            "time": 20.25,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "方案 B",
+            "fontPx": 18,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(2)",
+            "text": "餐品组合 B",
+            "fontPx": 18,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(1)",
+            "text": "方案 C",
+            "fontPx": 18,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(2)",
+            "text": "餐品组合 C",
+            "fontPx": 18,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-boundary",
+            "text": "仅比较传入候选；不穷举全菜单，不保证全局最低价。",
+            "fontPx": 18,
+            "time": 20.875,
+            "seconds": 5.5
+          },
+          {
+            "selector": "#scene-5 > div:nth-of-type(1)",
+            "text": "DSH-MCD-MCP / 05",
+            "fontPx": 18,
+            "time": 26.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "01",
+            "fontPx": 18,
+            "time": 26.625,
+            "seconds": 4.125
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "02",
+            "fontPx": 18,
+            "time": 26.75,
+            "seconds": 4
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "03",
+            "fontPx": 18,
+            "time": 26.875,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "04",
+            "fontPx": 18,
+            "time": 27,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s1-pill",
+            "text": "DSH 社区插件",
+            "fontPx": 19,
+            "time": 1.25,
+            "seconds": 5.25
+          },
+          {
+            "selector": "#s2-window > div:nth-of-type(2) > div:nth-of-type(7)",
+            "text": "连接清单快照 · 2026-11-03",
+            "fontPx": 19,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "01",
+            "fontPx": 19,
+            "time": 13.75,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "02",
+            "fontPx": 19,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "03",
+            "fontPx": 19,
+            "time": 14,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.pill.red",
+            "text": "只核价 · 不创建订单",
+            "fontPx": 19,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#scene-1 > div:nth-of-type(6) > span:nth-of-type(1)",
+            "text": "产品演示 / 2026",
+            "fontPx": 20,
+            "time": 0,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#scene-1 > div:nth-of-type(6) > span:nth-of-type(2)",
+            "text": "01 / 05",
+            "fontPx": 20,
+            "time": 0,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s1-kicker",
+            "text": "DSH PLUGIN",
+            "fontPx": 20,
+            "time": 0.375,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#scene-2 > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "凭证由用户自行提供 · 本机保存",
+            "fontPx": 20,
+            "time": 6.375,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#scene-2 > div:nth-of-type(4) > span:nth-of-type(2)",
+            "text": "02 / 05",
+            "fontPx": 20,
+            "time": 6.375,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#s2-kicker",
+            "text": "CONNECT ONCE",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-window > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "DeepSeek Harness · 设置",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "p.small",
+            "text": "Token 从 open.mcd.cn/mcp 获取，并由插件保存到本机。",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "已注册工具",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "远端工具",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "已存 Token",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-window > div:nth-of-type(2) > div:nth-of-type(3)",
+            "text": "MCP TOKEN",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-window > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(1)",
+            "text": "保存并连接",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-window > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(2)",
+            "text": "测试连接",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.fineprint",
+            "text": "凭证仅保存于本机配置文件；不写进对话上下文。",
+            "fontPx": 20,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#scene-3 > div:nth-of-type(5) > span:nth-of-type(1)",
+            "text": "按远端清单动态注册 · 远端能力可能变化",
+            "fontPx": 20,
+            "time": 13,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#scene-3 > div:nth-of-type(5) > span:nth-of-type(2)",
+            "text": "03 / 05",
+            "fontPx": 20,
+            "time": 13,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#s3-kicker",
+            "text": "REMOTE → NATIVE",
+            "fontPx": 20,
+            "time": 13.125,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "工具目录 · 自动同步",
+            "fontPx": 20,
+            "time": 13.25,
+            "seconds": 6.5
+          },
+          {
+            "selector": "span.section-label",
+            "text": "REGISTERED TOOL",
+            "fontPx": 20,
+            "time": 13.25,
+            "seconds": 6.5
+          },
+          {
+            "selector": "span.registry-count",
+            "text": "mcd_*",
+            "fontPx": 20,
+            "time": 13.25,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#scene-4 > div:nth-of-type(6) > span:nth-of-type(1)",
+            "text": "结果取决于当前门店、参数与官方返回",
+            "fontPx": 20,
+            "time": 19.5,
+            "seconds": 6.875
+          },
+          {
+            "selector": "#scene-4 > div:nth-of-type(6) > span:nth-of-type(2)",
+            "text": "04 / 05",
+            "fontPx": 20,
+            "time": 19.5,
+            "seconds": 6.875
+          },
+          {
+            "selector": "#s4-kicker",
+            "text": "COMPARE OFFICIAL QUOTES",
+            "fontPx": 20,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "候选餐单核价 · 演示流程",
+            "fontPx": 20,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "候选方案 · 同一家门店",
+            "fontPx": 20,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(3)",
+            "text": "官方实时报价",
+            "fontPx": 20,
+            "time": 20.25,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(3)",
+            "text": "官方实时报价",
+            "fontPx": 20,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-window > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(3)",
+            "text": "官方实时报价",
+            "fontPx": 20,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#scene-5 > div:nth-of-type(6) > span:nth-of-type(1)",
+            "text": "查看 GitHub 项目与安装说明",
+            "fontPx": 20,
+            "time": 26.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "#scene-5 > div:nth-of-type(6) > span:nth-of-type(2)",
+            "text": "END",
+            "fontPx": 20,
+            "time": 26.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "#s5-kicker",
+            "text": "MAKE MCP NATIVE",
+            "fontPx": 20,
+            "time": 26.375,
+            "seconds": 4.375
+          },
+          {
+            "selector": "#s5-disclaimer",
+            "text": "dsh-mcd-mcp 是第三方社区插件，与麦当劳无官方背书关系。",
+            "fontPx": 20,
+            "time": 27.625,
+            "seconds": 3.125
+          },
+          {
+            "selector": "div.status",
+            "text": "已连接",
+            "fontPx": 21,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s2-command",
+            "text": "dsh plugin --profile <profile>add dsh-mcd-mcp",
+            "fontPx": 21,
+            "time": 7.25,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "只读查询",
+            "fontPx": 21,
+            "time": 13.5,
+            "seconds": 6.25
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "价格计算",
+            "fontPx": 21,
+            "time": 13.625,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(2)",
+            "text": "需确认的写操作",
+            "fontPx": 21,
+            "time": 13.75,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(2)",
+            "text": "查看当前远端清单",
+            "fontPx": 21,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(6) > span:nth-of-type(2)",
+            "text": "连接与同步状态",
+            "fontPx": 21,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "div.budget > strong:nth-of-type(1)",
+            "text": "按你的需求设置",
+            "fontPx": 21,
+            "time": 19.75,
+            "seconds": 6.625
+          },
+          {
+            "selector": "#s1-tag",
+            "text": "MCD MCP → DSH",
+            "fontPx": 22,
+            "time": 1.25,
+            "seconds": 5.25
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "打开 设置 → 麦当劳 MCP",
+            "fontPx": 22,
+            "time": 7.625,
+            "seconds": 5.5
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "填写自己的 MCP Token",
+            "fontPx": 22,
+            "time": 7.75,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s2-steps > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "保存并连接 · 测试连通性",
+            "fontPx": 22,
+            "time": 7.875,
+            "seconds": 5.25
+          },
+          {
+            "selector": "#s4-notes > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "最多比较 5 个候选方案",
+            "fontPx": 22,
+            "time": 20.375,
+            "seconds": 6
+          },
+          {
+            "selector": "#s4-notes > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "同一家门店 · 到店自取",
+            "fontPx": 22,
+            "time": 20.5,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s4-notes > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "使用官方 calculate-price 核价",
+            "fontPx": 22,
+            "time": 20.625,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.result-box",
+            "text": "流程示意：实际结果由官方报价返回。本片未执行真实核价。",
+            "fontPx": 22,
+            "time": 20.625,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "mcd_<remote_tool>",
+            "fontPx": 23,
+            "time": 13.5,
+            "seconds": 6.25
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "mcd_<remote_tool>",
+            "fontPx": 23,
+            "time": 13.625,
+            "seconds": 6.125
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "麦当劳 MCP 工具清单",
+            "fontPx": 23,
+            "time": 13.75,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "mcd_<remote_tool>",
+            "fontPx": 23,
+            "time": 13.75,
+            "seconds": 6
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "按远端名称动态注册",
+            "fontPx": 23,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(1)",
+            "text": "mcd_tools",
+            "fontPx": 23,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-window > div:nth-of-type(2) > div:nth-of-type(6) > span:nth-of-type(1)",
+            "text": "mcd_status",
+            "fontPx": 23,
+            "time": 13.875,
+            "seconds": 5.875
+          },
+          {
+            "selector": "#s3-flow > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "DSH 原生工具可调用",
+            "fontPx": 23,
+            "time": 14,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s5-repo",
+            "text": "github.com/4KAForever11/dsh-mcd-mcp",
+            "fontPx": 23,
+            "time": 27.125,
+            "seconds": 3.625
+          },
+          {
+            "selector": "div.settings-title",
+            "text": "麦当劳 MCP",
+            "fontPx": 24,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "36",
+            "fontPx": 25,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "36",
+            "fontPx": 25,
+            "time": 6.625,
+            "seconds": 6.5
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "工具清单动态同步",
+            "fontPx": 25,
+            "time": 26.625,
+            "seconds": 4.125
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "Token 本机安全保存",
+            "fontPx": 25,
+            "time": 26.75,
+            "seconds": 4
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "候选餐单官方核价",
+            "fontPx": 25,
+            "time": 26.875,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s5-features > div:nth-of-type(4) > span:nth-of-type(2)",
+            "text": "清楚标注操作边界",
+            "fontPx": 25,
+            "time": 27,
+            "seconds": 3.75
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "The film's last line \"MAKE MCP NATIVE 让 MCP 融入 DSH 工作流 github.com/4KAForever11/...\" (15 words) is on screen 3.54 s (±0.01 s), under the 3.75 s a closing line needs: hold it about 0.5 s + 0.3 s a word and at least 2 s before the film ends; see references/motion.md.",
+        "text": "MAKE MCP NATIVE 让 MCP 融入 DSH 工作流 github.com/4KAForever11/dsh-mcd-mcp",
+        "selector": "div.s5-title",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 145,
+          "y": 223,
+          "width": 483,
+          "height": 407.21000000000004
+        },
+        "time": 27.102,
+        "words": 15,
+        "seconds": 3.539,
+        "floorSeconds": 3.75
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 280
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

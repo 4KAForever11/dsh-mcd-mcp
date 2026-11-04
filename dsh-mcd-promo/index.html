@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>DSH 麦当劳 MCP 插件演示</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #fff9e9;
+        --ink: #171717;
+        --yellow: #ffc72c;
+        --red: #da291c;
+        --surface: #ffffff;
+        --muted: #68635a;
+        --line: #e8e0d2;
+        --green: #227647;
+        --font: "Microsoft YaHei UI", sans-serif;
+        --mono: Consolas, "Courier New", monospace;
+      }
+      @font-face {
+        font-family: "Microsoft YaHei UI";
+        src: local("Microsoft YaHei UI");
+        font-style: normal;
+        font-weight: 100 900;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--font);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        padding: 86px 132px 74px;
+        overflow: hidden;
+        opacity: 0;
+        background: var(--ground);
+      }
+      #scene-1 { opacity: 1; }
+      .scene::before {
+        content: "";
+        position: absolute;
+        left: 132px;
+        right: 132px;
+        top: 65px;
+        height: 2px;
+        background: var(--ink);
+        opacity: .12;
+      }
+      .eyebrow, .micro, .mono { font-family: var(--mono); }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--red);
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 700;
+      }
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 8px;
+        background: var(--yellow);
+      }
+      h1, h2, p { margin: 0; }
+      h1, h2 { font-weight: 800; letter-spacing: 0; }
+      h1 { font-size: 88px; line-height: 1.14; }
+      h2 { font-size: 68px; line-height: 1.18; }
+      .lead { color: var(--muted); font-size: 30px; line-height: 1.55; }
+      .small { color: var(--muted); font-size: 20px; line-height: 1.5; }
+      .footer {
+        position: absolute;
+        left: 132px;
+        right: 132px;
+        bottom: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #716b61;
+        font-size: 20px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 22px;
+        background: var(--yellow);
+        color: var(--ink);
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .pill.red { background: var(--red); color: #fff; }
+      .mono { font-weight: 700; }
+      .window {
+        border: 1px solid #ded7ca;
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--surface);
+        box-shadow: 0 26px 70px rgba(40, 31, 10, .12);
+      }
+      .window-bar {
+        height: 54px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 20px;
+        background: #f4f1ea;
+        border-bottom: 1px solid var(--line);
+      }
+      .dot { width: 12px; height: 12px; border-radius: 50%; background: #cfc6b8; }
+      .window-name { margin-left: 12px; color: #5d574d; font-size: 20px; }
+      .window-body { padding: 28px 32px; }
+      .section-label { color: var(--muted); font-size: 20px; font-weight: 700; }
+      .field {
+        height: 62px;
+        display: flex;
+        align-items: center;
+        padding: 0 18px;
+        border: 1px solid #d9d2c6;
+        border-radius: 8px;
+        background: #faf9f6;
+        color: #787269;
+        font-size: 20px;
+      }
+      .button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 56px;
+        padding: 0 24px;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--red);
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .tool-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 76px;
+        padding: 0 22px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fff;
+      }
+      .tool-name { color: var(--red); font-family: var(--mono); font-size: 23px; font-weight: 700; }
+      .tool-type { color: var(--muted); font-size: 21px; }
+      .arrow { color: var(--red); font-family: var(--mono); font-size: 36px; font-weight: 700; }
+      .gridline {
+        position: absolute;
+        top: 65px;
+        bottom: 100px;
+        left: 50%;
+        width: 1px;
+        background: var(--ink);
+        opacity: .05;
+      }
+      .rule {
+        height: 6px;
+        width: 130px;
+        background: var(--yellow);
+      }
+      .wipe {
+        position: absolute;
+        z-index: 20;
+        top: 0;
+        left: 0;
+        width: 510px;
+        height: 1080px;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .wipe-yellow { position: absolute; inset: 0 76px 0 0; background: var(--yellow); }
+      .wipe-red { position: absolute; top: 0; right: 30px; width: 46px; height: 100%; background: var(--red); }
+      .wipe-black { position: absolute; top: 0; right: 0; width: 18px; height: 100%; background: var(--ink); }
+
+      /* Opening */
+      .hero-copy { position: absolute; left: 150px; top: 220px; width: 770px; }
+      .hero-copy h1 { margin-top: 30px; max-width: 780px; }
+      .hero-copy .lead { width: 660px; margin-top: 32px; }
+      .hero-copy .pill { margin-top: 36px; }
+      .hero-mark {
+        position: absolute;
+        right: 177px;
+        top: 260px;
+        width: 500px;
+        height: 500px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--yellow);
+      }
+      .hero-mark::before {
+        content: "";
+        position: absolute;
+        inset: 29px;
+        border: 2px solid rgba(23,23,23,.16);
+        border-radius: 50%;
+      }
+      .hero-icon { width: 210px; height: 210px; object-fit: contain; }
+      .hero-tag {
+        position: absolute;
+        right: 94px;
+        bottom: 150px;
+        padding: 17px 24px;
+        background: var(--red);
+        color: #fff;
+        font: 700 22px var(--mono);
+        transform: rotate(-3deg);
+      }
+      .corner-index { position: absolute; top: 83px; right: 132px; font: 700 18px var(--mono); color: var(--muted); }
+
+      /* Setup */
+      .s2-copy { position: absolute; left: 145px; top: 188px; width: 600px; }
+      .s2-copy h2 { margin-top: 24px; }
+      .s2-copy .lead { margin-top: 26px; width: 540px; }
+      .command { margin-top: 34px; padding: 21px 24px; background: var(--ink); color: #fff; border-radius: 10px; font: 21px/1.7 var(--mono); }
+      .step-list { display: grid; gap: 16px; margin-top: 28px; }
+      .step { display: flex; align-items: center; gap: 16px; font-size: 22px; font-weight: 700; }
+      .step-no { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--yellow); font: 700 18px var(--mono); }
+      .settings-window { position: absolute; top: 160px; right: 145px; width: 850px; height: 710px; }
+      .settings-window .window-body { display: grid; gap: 20px; }
+      .settings-top { display: flex; justify-content: space-between; align-items: center; }
+      .settings-title { font-size: 24px; font-weight: 700; }
+      .status { color: var(--green); font-size: 21px; font-weight: 700; }
+      .status::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 9px; border-radius: 50%; background: var(--green); }
+      .stats { display: flex; gap: 42px; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .stat-k { color: var(--muted); font-size: 20px; }
+      .stat-v { margin-top: 6px; font: 700 25px var(--mono); }
+      .fineprint { color: var(--muted); font-size: 20px; line-height: 1.5; }
+
+      /* Registry */
+      .s3-head { position: absolute; left: 145px; top: 170px; width: 800px; }
+      .s3-head h2 { margin-top: 23px; }
+      .s3-head .lead { margin-top: 19px; }
+      .registry-window { position: absolute; right: 148px; top: 170px; width: 840px; height: 620px; }
+      .registry-window .window-body { display: grid; gap: 13px; padding: 24px; }
+      .registry-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+      .registry-count { font: 700 20px var(--mono); color: var(--red); }
+      .flow-strip { position: absolute; left: 156px; top: 510px; width: 670px; display: grid; gap: 19px; }
+      .flow-step { display: flex; align-items: center; gap: 18px; font-size: 23px; font-weight: 700; }
+      .flow-step .square { width: 48px; height: 48px; display: grid; place-items: center; background: var(--yellow); font: 700 19px var(--mono); }
+      .registry-foot { position: absolute; left: 156px; bottom: 167px; width: 590px; color: var(--muted); font-size: 18px; line-height: 1.55; }
+
+      /* Planner */
+      .s4-head { position: absolute; left: 145px; top: 160px; width: 850px; }
+      .s4-head h2 { margin-top: 20px; }
+      .s4-head .lead { margin-top: 20px; width: 770px; }
+      .planner-window { position: absolute; right: 148px; top: 153px; width: 820px; height: 630px; }
+      .planner-window .window-body { display: grid; gap: 16px; padding: 26px 28px; }
+      .budget { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-radius: 9px; background: #fff4cc; font-size: 22px; }
+      .budget strong { font: 700 21px var(--mono); }
+      .candidate { display: grid; grid-template-columns: 92px 1fr 190px; align-items: center; min-height: 70px; padding: 0 15px; border: 1px solid var(--line); border-radius: 8px; }
+      .candidate-id { font: 700 18px var(--mono); color: var(--red); }
+      .candidate-info { color: #403c35; font-size: 18px; }
+      .candidate-state { justify-self: end; color: var(--muted); font-size: 20px; }
+      .result-box { margin-top: 4px; padding: 18px 20px; border-radius: 8px; border: 1px dashed #cbbd9f; color: #514a3d; font-size: 22px; line-height: 1.55; }
+      .s4-notes { position: absolute; left: 156px; top: 590px; display: grid; gap: 20px; }
+      .note { display: flex; align-items: center; gap: 16px; font-size: 22px; font-weight: 700; }
+      .note-mark { width: 9px; height: 30px; background: var(--red); }
+      .boundary { position: absolute; left: 156px; bottom: 164px; color: var(--muted); font-size: 18px; line-height: 1.55; width: 690px; }
+
+      /* Close */
+      .s5-title { position: absolute; left: 145px; top: 224px; width: 830px; }
+      .s5-title h2 { margin-top: 25px; font-size: 82px; }
+      .repo { display: inline-block; margin-top: 29px; color: var(--red); font: 700 23px var(--mono); }
+      .s5-features { position: absolute; right: 150px; top: 238px; width: 590px; display: grid; gap: 20px; }
+      .feature { display: flex; align-items: center; gap: 20px; min-height: 82px; border-bottom: 1px solid #d9d0c0; font-size: 25px; font-weight: 700; }
+      .feature-num { display: grid; place-items: center; width: 48px; height: 48px; background: var(--yellow); font: 700 18px var(--mono); }
+      .brand-block { position: absolute; left: 146px; bottom: 170px; width: 330px; height: 18px; background: var(--red); }
+      .brand-block::after { content: ""; position: absolute; left: 330px; top: 0; width: 185px; height: 18px; background: var(--yellow); }
+      .disclaimer { position: absolute; left: 146px; bottom: 115px; color: var(--muted); font-size: 20px; }
+    </style>
+  </head>
+  <body>
+    <main id="root" data-composition-id="main" data-start="0" data-duration="31" data-width="1920" data-height="1080">
+      <section class="scene" id="scene-1">
+        <div class="gridline"></div>
+        <div class="corner-index" data-layout-allow-overlap>DSH PLUGIN / 01</div>
+        <div class="hero-copy">
+          <div class="eyebrow" id="s1-kicker" data-layout-allow-overlap>DSH PLUGIN</div>
+          <h1 id="s1-title">麦当劳 MCP<br />接入 DSH</h1>
+          <p class="lead" id="s1-lead">把远端工具，带进 DeepSeek Harness。</p>
+          <div class="pill" id="s1-pill">DSH 社区插件</div>
+        </div>
+        <div class="hero-mark" id="s1-mark">
+          <img class="hero-icon" src="assets/plugin-icon.svg" alt="dsh-mcd-mcp 插件图标" />
+        </div>
+        <div class="hero-tag" id="s1-tag">MCD MCP → DSH</div>
+        <div class="footer" data-layout-allow-overlap><span>产品演示 / 2026</span><span>01 / 05</span></div>
+      </section>
+
+      <section class="scene" id="scene-2">
+        <div class="corner-index" data-layout-allow-overlap>SETUP / 02</div>
+        <div class="s2-copy">
+          <div class="eyebrow" id="s2-kicker">CONNECT ONCE</div>
+          <h2 id="s2-title">几步完成<br />接入</h2>
+          <p class="lead" id="s2-lead">安装插件，填入你自己生成的 Token，再测试连接。</p>
+          <div class="command mono" id="s2-command">dsh plugin --profile &lt;profile&gt;<br />add dsh-mcd-mcp</div>
+          <div class="step-list" id="s2-steps">
+            <div class="step"><span class="step-no">1</span><span>打开 设置 → 麦当劳 MCP</span></div>
+            <div class="step"><span class="step-no">2</span><span>填写自己的 MCP Token</span></div>
+            <div class="step"><span class="step-no">3</span><span>保存并连接 · 测试连通性</span></div>
+          </div>
+        </div>
+        <div class="window settings-window" id="s2-window" data-layout-allow-overlap>
+          <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="window-name">DeepSeek Harness · 设置</span></div>
+          <div class="window-body">
+            <div class="settings-top"><div class="settings-title">麦当劳 MCP</div><div class="status">已连接</div></div>
+            <p class="small">Token 从 open.mcd.cn/mcp 获取，并由插件保存到本机。</p>
+            <div class="stats">
+              <div><div class="stat-k">已注册工具</div><div class="stat-v">36</div></div>
+              <div><div class="stat-k">远端工具</div><div class="stat-v">36</div></div>
+              <div><div class="stat-k">已存 Token</div><div class="stat-v">••••••••</div></div>
+            </div>
+            <div class="section-label">MCP TOKEN</div>
+            <div class="field">••••••••••••••••••••••••••••••••</div>
+            <div class="settings-top"><div class="button">保存并连接</div><div class="button" style="background:#fff;color:#171717;border:1px solid #ded7ca">测试连接</div></div>
+            <div class="fineprint">凭证仅保存于本机配置文件；不写进对话上下文。</div>
+            <div class="pill" style="justify-self:start">连接清单快照 · 2026-11-03</div>
+          </div>
+        </div>
+        <div class="footer" data-layout-allow-overlap><span>凭证由用户自行提供 · 本机保存</span><span>02 / 05</span></div>
+      </section>
+
+      <section class="scene" id="scene-3">
+        <div class="corner-index" data-layout-allow-overlap>DYNAMIC TOOLS / 03</div>
+        <div class="s3-head">
+          <div class="eyebrow" id="s3-kicker" data-layout-allow-overlap>REMOTE → NATIVE</div>
+          <h2 id="s3-title">远端工具<br />自动接入</h2>
+          <p class="lead" id="s3-lead">连接后拉取工具清单，自动映射为带有 <span class="mono">mcd_</span> 前缀的 DSH 工具。</p>
+        </div>
+        <div class="flow-strip" id="s3-flow">
+          <div class="flow-step"><span class="square">01</span><span>麦当劳 MCP 工具清单</span></div>
+          <div class="flow-step"><span class="square">02</span><span>按远端名称动态注册</span></div>
+          <div class="flow-step"><span class="square">03</span><span>DSH 原生工具可调用</span></div>
+        </div>
+        <div class="registry-window window" id="s3-window" data-layout-allow-overlap>
+          <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="window-name">工具目录 · 自动同步</span></div>
+          <div class="window-body">
+            <div class="registry-top"><span class="section-label">REGISTERED TOOL</span><span class="registry-count">mcd_*</span></div>
+            <div class="tool-row"><span class="tool-name">mcd_&lt;remote_tool&gt;</span><span class="tool-type">只读查询</span></div>
+            <div class="tool-row"><span class="tool-name">mcd_&lt;remote_tool&gt;</span><span class="tool-type">价格计算</span></div>
+            <div class="tool-row"><span class="tool-name">mcd_&lt;remote_tool&gt;</span><span class="tool-type">需确认的写操作</span></div>
+            <div class="tool-row"><span class="tool-name">mcd_tools</span><span class="tool-type">查看当前远端清单</span></div>
+            <div class="tool-row"><span class="tool-name">mcd_status</span><span class="tool-type">连接与同步状态</span></div>
+          </div>
+        </div>
+        <p class="registry-foot" id="s3-foot">服务端工具有变化时，插件可重新同步清单。具体可用工具以远端当前返回为准。</p>
+        <div class="footer" data-layout-allow-overlap><span>按远端清单动态注册 · 远端能力可能变化</span><span>03 / 05</span></div>
+      </section>
+
+      <section class="scene" id="scene-4">
+        <div class="corner-index" data-layout-allow-overlap>BUDGET PLANNER / 04</div>
+        <div class="s4-head">
+          <div class="eyebrow" id="s4-kicker" data-layout-allow-overlap>COMPARE OFFICIAL QUOTES</div>
+          <h2 id="s4-title"><span class="mono">mcd_plan_order</span><br />预算内比方案</h2>
+          <p class="lead" id="s4-lead">把准备好的候选交给工具，再按官方实时核价结果比较。</p>
+        </div>
+        <div class="s4-notes" id="s4-notes">
+          <div class="note"><span class="note-mark"></span><span>最多比较 5 个候选方案</span></div>
+          <div class="note"><span class="note-mark"></span><span>同一家门店 · 到店自取</span></div>
+          <div class="note"><span class="note-mark"></span><span>使用官方 calculate-price 核价</span></div>
+        </div>
+        <div class="boundary" id="s4-boundary">仅比较传入候选；不穷举全菜单，不保证全局最低价。</div>
+        <div class="planner-window window" id="s4-window">
+          <div class="window-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="window-name">候选餐单核价 · 演示流程</span></div>
+          <div class="window-body">
+            <div class="budget"><span>本次预算</span><strong>按你的需求设置</strong></div>
+            <div class="section-label">候选方案 · 同一家门店</div>
+            <div class="candidate"><span class="candidate-id">方案 A</span><span class="candidate-info">餐品组合 A</span><span class="candidate-state">官方实时报价</span></div>
+            <div class="candidate"><span class="candidate-id">方案 B</span><span class="candidate-info">餐品组合 B</span><span class="candidate-state">官方实时报价</span></div>
+            <div class="candidate"><span class="candidate-id">方案 C</span><span class="candidate-info">餐品组合 C</span><span class="candidate-state">官方实时报价</span></div>
+            <div class="result-box">流程示意：实际结果由官方报价返回。本片未执行真实核价。</div>
+            <div class="pill red" style="justify-self:start">只核价 · 不创建订单</div>
+          </div>
+        </div>
+        <div class="footer" data-layout-allow-overlap><span>结果取决于当前门店、参数与官方返回</span><span>04 / 05</span></div>
+      </section>
+
+      <section class="scene" id="scene-5">
+        <div class="corner-index" data-layout-allow-overlap>DSH-MCD-MCP / 05</div>
+        <div class="s5-title">
+          <div class="eyebrow" id="s5-kicker">MAKE MCP NATIVE</div>
+          <h2 id="s5-title">让 MCP<br />融入 DSH<br />工作流</h2>
+          <span class="repo" id="s5-repo">github.com/4KAForever11/dsh-mcd-mcp</span>
+        </div>
+        <div class="s5-features" id="s5-features">
+          <div class="feature"><span class="feature-num">01</span><span>工具清单动态同步</span></div>
+          <div class="feature"><span class="feature-num">02</span><span>Token 本机安全保存</span></div>
+          <div class="feature"><span class="feature-num">03</span><span>候选餐单官方核价</span></div>
+          <div class="feature"><span class="feature-num">04</span><span>清楚标注操作边界</span></div>
+        </div>
+        <div class="brand-block" id="s5-bar"></div>
+        <div class="disclaimer" id="s5-disclaimer">dsh-mcd-mcp 是第三方社区插件，与麦当劳无官方背书关系。</div>
+        <div class="footer" data-layout-allow-overlap><span>查看 GitHub 项目与安装说明</span><span>END</span></div>
+      </section>
+
+      <div class="wipe" id="wipe-1"><div class="wipe-yellow"></div><div class="wipe-red"></div><div class="wipe-black"></div></div>
+      <div class="wipe" id="wipe-2"><div class="wipe-yellow"></div><div class="wipe-red"></div><div class="wipe-black"></div></div>
+      <div class="wipe" id="wipe-3"><div class="wipe-yellow"></div><div class="wipe-red"></div><div class="wipe-black"></div></div>
+      <div class="wipe" id="wipe-4"><div class="wipe-yellow"></div><div class="wipe-red"></div><div class="wipe-black"></div></div>
+      <audio id="narration" data-start="0" data-duration="31" data-track-index="2" src="narration-final.wav" data-volume="1"></audio>
+    </main>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.from("#s1-kicker", { x: -28, opacity: 0, duration: .42, ease: "power4.out" }, .25);
+      tl.from("#s1-title", { y: 44, opacity: 0, duration: .62, ease: "expo.out" }, .4);
+      tl.from("#s1-lead", { y: 25, opacity: 0, duration: .48, ease: "power2.out" }, .78);
+      tl.from("#s1-pill", { scale: .92, opacity: 0, duration: .4, ease: "back.out(1.5)" }, 1.05);
+      tl.from("#s1-mark", { scale: .82, rotation: -5, opacity: 0, duration: .7, ease: "back.out(1.4)" }, .35);
+      tl.from("#s1-tag", { x: 38, rotation: -8, opacity: 0, duration: .42, ease: "power3.out" }, 1.05);
+      tl.fromTo("#s1-mark", { scale: 1 }, { scale: 1.018, duration: 1.6, repeat: 2, yoyo: true, ease: "sine.inOut", immediateRender: false }, 2.0);
+
+      tl.to("#scene-1", { opacity: 0, x: -28, duration: .58, ease: "power2.inOut" }, 6.2);
+      tl.fromTo("#scene-2", { opacity: 0, x: 45 }, { opacity: 1, x: 0, duration: .58, ease: "power3.out" }, 6.2);
+      tl.fromTo("#wipe-1", { x: -520, opacity: 1 }, { x: 2000, opacity: 1, duration: .72, ease: "power4.inOut", immediateRender: false }, 6.15);
+      tl.to("#wipe-1", { opacity: 0, duration: .01 }, 6.88);
+      tl.from("#s2-kicker", { x: -24, opacity: 0, duration: .38, ease: "power4.out" }, 6.48);
+      tl.from("#s2-title", { y: 38, opacity: 0, duration: .55, ease: "expo.out" }, 6.58);
+      tl.from("#s2-lead", { y: 24, opacity: 0, duration: .42, ease: "power2.out" }, 6.9);
+      tl.from("#s2-command", { y: 26, opacity: 0, duration: .42, ease: "power3.out" }, 7.14);
+      tl.from("#s2-steps .step", { x: -22, opacity: 0, duration: .34, stagger: .11, ease: "back.out(1.15)" }, 7.48);
+      tl.from("#s2-window", { x: 42, opacity: 0, duration: .55, ease: "power3.out" }, 6.44);
+      tl.fromTo("#s2-window .stats", { x: 0 }, { x: 5, duration: 1.1, repeat: 3, yoyo: true, ease: "sine.inOut", immediateRender: false }, 8.3);
+
+      tl.to("#scene-2", { opacity: 0, x: -26, duration: .56, ease: "power2.inOut" }, 12.8);
+      tl.fromTo("#scene-3", { opacity: 0, x: 42 }, { opacity: 1, x: 0, duration: .56, ease: "power3.out" }, 12.8);
+      tl.fromTo("#wipe-2", { x: -520, opacity: 1 }, { x: 2000, opacity: 1, duration: .72, ease: "power4.inOut", immediateRender: false }, 12.75);
+      tl.to("#wipe-2", { opacity: 0, duration: .01 }, 13.48);
+      tl.from("#s3-kicker", { x: -26, opacity: 0, duration: .38, ease: "power4.out" }, 13.03);
+      tl.from("#s3-title", { y: 38, opacity: 0, duration: .55, ease: "expo.out" }, 13.12);
+      tl.from("#s3-lead", { y: 24, opacity: 0, duration: .42, ease: "power2.out" }, 13.43);
+      tl.from("#s3-flow .flow-step", { x: -20, opacity: 0, duration: .38, stagger: .13, ease: "back.out(1.2)" }, 13.6);
+      tl.from("#s3-window", { x: 46, opacity: 0, duration: .55, ease: "power3.out" }, 13.04);
+      tl.from("#s3-window .tool-row", { x: 23, opacity: 0, duration: .32, stagger: .09, ease: "power2.out" }, 13.42);
+      tl.from("#s3-foot", { y: 18, opacity: 0, duration: .4, ease: "power2.out" }, 14.02);
+      tl.fromTo("#s3-window .registry-count", { scale: 1 }, { scale: 1.045, duration: .62, repeat: 5, yoyo: true, ease: "sine.inOut", immediateRender: false }, 14.5);
+
+      tl.to("#scene-3", { opacity: 0, x: -24, duration: .56, ease: "power2.inOut" }, 19.35);
+      tl.fromTo("#scene-4", { opacity: 0, x: 42 }, { opacity: 1, x: 0, duration: .56, ease: "power3.out" }, 19.35);
+      tl.fromTo("#wipe-3", { x: -520, opacity: 1 }, { x: 2000, opacity: 1, duration: .72, ease: "power4.inOut", immediateRender: false }, 19.3);
+      tl.to("#wipe-3", { opacity: 0, duration: .01 }, 20.03);
+      tl.from("#s4-kicker", { x: -26, opacity: 0, duration: .38, ease: "power4.out" }, 19.58);
+      tl.from("#s4-title", { y: 39, opacity: 0, duration: .58, ease: "expo.out" }, 19.68);
+      tl.from("#s4-lead", { y: 24, opacity: 0, duration: .42, ease: "power2.out" }, 20.02);
+      tl.from("#s4-notes .note", { x: -20, opacity: 0, duration: .34, stagger: .11, ease: "back.out(1.15)" }, 20.25);
+      tl.from("#s4-boundary", { y: 17, opacity: 0, duration: .4, ease: "power2.out" }, 20.7);
+      tl.from("#s4-window", { x: 44, opacity: 0, duration: .55, ease: "power3.out" }, 19.6);
+      tl.from("#s4-window .candidate", { x: 20, opacity: 0, duration: .3, stagger: .1, ease: "power2.out" }, 20.08);
+      tl.from("#s4-window .result-box", { y: 16, opacity: 0, duration: .38, ease: "power2.out" }, 20.52);
+      tl.fromTo("#s4-window .budget", { x: 0 }, { x: 5, duration: 1.0, repeat: 3, yoyo: true, ease: "sine.inOut", immediateRender: false }, 21.2);
+
+      tl.to("#scene-4", { opacity: 0, x: -24, duration: .58, ease: "power2.inOut" }, 26.0);
+      tl.fromTo("#scene-5", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: .58, ease: "power3.out" }, 26.0);
+      tl.fromTo("#wipe-4", { x: -520, opacity: 1 }, { x: 2000, opacity: 1, duration: .72, ease: "power4.inOut", immediateRender: false }, 25.95);
+      tl.to("#wipe-4", { opacity: 0, duration: .01 }, 26.68);
+      tl.from("#s5-kicker", { x: -25, opacity: 0, duration: .38, ease: "power4.out" }, 26.25);
+      tl.from("#s5-title", { y: 36, opacity: 0, duration: .58, ease: "expo.out" }, 26.15);
+      tl.from("#s5-repo", { y: 18, opacity: 0, duration: .42, ease: "power2.out" }, 26.78);
+      tl.from("#s5-features .feature", { x: 26, opacity: 0, duration: .36, stagger: .12, ease: "back.out(1.15)" }, 26.48);
+      tl.from("#s5-bar", { scaleX: 0, transformOrigin: "left center", duration: .5, ease: "power3.out" }, 27.25);
+      tl.from("#s5-disclaimer", { opacity: 0, duration: .45, ease: "power2.out" }, 27.5);
+      tl.fromTo("#s5-bar", { scaleX: 1 }, { scaleX: 1.025, duration: 1.3, repeat: 2, yoyo: true, ease: "sine.inOut", immediateRender: false }, 28.4);
+      tl.to("#scene-5", { opacity: 0, duration: .55, ease: "power1.inOut" }, 30.35);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
